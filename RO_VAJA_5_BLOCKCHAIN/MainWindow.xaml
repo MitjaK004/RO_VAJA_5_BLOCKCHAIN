@@ -1,0 +1,36 @@
+﻿<Window x:Class="RO_VAJA_5_BLOCKCHAIN.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RO_VAJA_5_BLOCKCHAIN"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Background="#2c2f33">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Menu VerticalAlignment="Center">
+            <MenuItem Header="Network">
+                <MenuItem x:Name="NodeManagerBtn" Header="Node Manager" Click="NodeManagerBtn_Click"></MenuItem>
+            </MenuItem>
+        </Menu>
+        <ListView Grid.Row="1" Name="TextsListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
+                    ItemsSource="{Binding Ledger}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" FontSize="10" Content="{Binding Data}"></Label>
+                        <Label FontSize="10" Margin="10, 0, 0, 0" Grid.Row="1" Content="{Binding TimeStamp}"></Label>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+    </Grid>
+</Window>

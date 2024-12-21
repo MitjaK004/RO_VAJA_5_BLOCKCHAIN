@@ -25,12 +25,13 @@ namespace RO_VAJA_5_BLOCKCHAIN
             DataContext = VM;
         }
 
-        private void NodeManagerBtn_Click(object sender, RoutedEventArgs e)
+
+        private void AddNodeBtn_Click(object sender, RoutedEventArgs e)
         {
-            NodeManagerWindow NMW = new NodeManagerWindow(VM);
-            if(NMW.ShowDialog() == true)
+            AddNodeWindow ANW = new AddNodeWindow(Connection.StdServerPort);
+            if (ANW.ShowDialog() == true)
             {
-                //a
+                VM.networkHandler.AddNode(ANW.node);
             }
         }
     }

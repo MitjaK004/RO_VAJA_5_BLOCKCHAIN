@@ -10,27 +10,56 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <Menu VerticalAlignment="Center">
-            <MenuItem Header="Network">
-                <MenuItem x:Name="NodeManagerBtn" Header="Node Manager" Click="NodeManagerBtn_Click"></MenuItem>
+            <MenuItem Header="Nodes">
+                <MenuItem x:Name="AddNodeBtn" Header="Add Node" Click="AddNodeBtn_Click"></MenuItem>
             </MenuItem>
         </Menu>
-        <ListView Grid.Row="1" Name="TextsListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
-                    ItemsSource="{Binding Ledger}">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Label Grid.Row="0" FontSize="10" Content="{Binding Data}"></Label>
-                        <Label FontSize="10" Margin="10, 0, 0, 0" Grid.Row="1" Content="{Binding TimeStamp}"></Label>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ListView Grid.Column="0" Name="LedgerListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
+            ItemsSource="{Binding Ledger}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" FontSize="10" Content="{Binding Data}"></Label>
+                            <Label FontSize="10" Margin="10, 0, 0, 0" Grid.Row="1" Content="{Binding TimeStamp}"></Label>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <ListView Grid.Column="1" Name="TextsListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
+            ItemsSource="{Binding networkHandler}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Label Grid.Row="0" FontSize="16" Content="{Binding Data}"></Label>
+                            <Label Margin="10, 0, 0, 0" Grid.Row="1" FontSize="14" Content="{Binding TimeStamp}"></Label>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0">Local Standard Server Port:</Label>
+            <Label Grid.Column="1" Content="{Binding networkHandler.StdServerPort}"></Label>
+        </Grid>
     </Grid>
 </Window>

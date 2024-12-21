@@ -122,7 +122,7 @@
         <Setter Property="BorderBrush" Value="#2C2F33"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Margin" Value="10, 0, 0, 0"/>
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="8"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -231,5 +231,10 @@
 
     <Style TargetType="ListView">
         <Setter Property="Background" Value="#2C2F33"/>
+        <Setter Property="FontSize" Value="8"/>
+    </Style>
+
+    <Style TargetType="Label" x:Key="SmallText">
+        <Setter Property="FontSize" Value="7"/>
     </Style>
 </ResourceDictionary>

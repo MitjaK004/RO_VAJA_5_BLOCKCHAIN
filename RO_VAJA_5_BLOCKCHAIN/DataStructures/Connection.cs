@@ -34,11 +34,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             this.node2 = node2;
             this.node1 = new Node("127.0.0.1", defaultLocalPort++);
-            client = new TcpClient(node2.IPEndPoint);
+            client = new TcpClient();
             server = new TcpListener(node1.IPEndPoint);
             RunConnection(false);
         }
-        private async Task ConnctToClientSServer()
+        private void ConnctToClientSServer()
         {
             byte[] buffer = new byte[MaxBufferSize]
 ;           int bytesRead = remoteClient.GetStream().Read(buffer, 0, MaxBufferSize);
@@ -100,7 +100,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 try
                 {
-                    await Task.Run(() => ConnectToServer());
+                    ConnectToServer();
                 }
                 catch (Exception e)
                 {
@@ -114,12 +114,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             }
             else
             {
-                await ConnctToClientSServer();
+                ConnctToClientSServer();
                 ConncetionRunning = true;
             }
             Task.Run(() => Reciever());
         }
-        private async Task<Task> ConnectToServer()
+        private void ConnectToServer()
         {
                 byte[] confirmation = new byte[1];
                 client.Connect(node2.IPEndPoint);
@@ -127,13 +127,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 client.GetStream().Read(confirmation, 0, 1);
                 if (confirmation[0] == 1)
                 {
-                    return Task.CompletedTask;
+                    return;
                 }
                 else
                 {
                     throw new Exception("Connection failed");
                 }
-            return Task.CompletedTask;
+            return;
         }
         private async Task<Task> ServerListen()
         {

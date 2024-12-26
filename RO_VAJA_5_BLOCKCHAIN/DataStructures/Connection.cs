@@ -19,8 +19,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Node node1 { get; private set; }
         public Node node2 { get; private set; }
         public bool ConncetionRunning = false;
+
         TcpClient client;
+        NetworkStream clientStream;
         TcpClient remoteClient;
+        NetworkStream remoteClientStream;
         TcpListener server;
         public Connection(Node node1, Node node2)
         {
@@ -40,24 +43,33 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private void ConnctToClientSServer()
         {
-            byte[] buffer = new byte[MaxBufferSize]
-;           int bytesRead = remoteClient.GetStream().Read(buffer, 0, MaxBufferSize);
-            Array.Resize(ref buffer, bytesRead);
-            string res = Encoding.UTF8.GetString(buffer);
-            string[] ipPort = res.Split(';');
-            node2.IP = ipPort[0];
-            node2.Port = int.Parse(ipPort[1]);
-            byte[] confirmation = new byte[1];
-            confirmation[0] = 1;
-            remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
-            client = new TcpClient();
-            client.Connect(node2.IPEndPoint);
+            try
+            {
+                byte[] buffer = new byte[MaxBufferSize];
+                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
+                Array.Resize(ref buffer, bytesRead);
+                string res = Encoding.UTF8.GetString(buffer);
+                string[] ipPort = res.Split(';');
+                node2.IP = ipPort[0];
+                node2.Port = int.Parse(ipPort[1]);
+                byte[] confirmation = new byte[1];
+                confirmation[0] = 1;
+                remoteClientStream.Write(confirmation, 0, confirmation.Length);
+                client = new TcpClient();
+                client.Connect(node2.IPEndPoint);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
+                return;
+            }
         }
         public Connection(Node node1, TcpListener _server, TcpClient _rclient)
         {
             this.node1 = node1;
             server = _server;
             remoteClient = _rclient;
+            remoteClientStream = remoteClient.GetStream();
             RunConnection(true);
         }
         public byte[] PopRecieved()
@@ -73,7 +85,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 byte[] data = new byte[MaxBufferSize];
                 byte[] confirmation = new byte[1];
                 confirmation[0] = 1;
-                int bytesRead = remoteClient.GetStream().Read(data, 0, data.Length);
+                int bytesRead = remoteClientStream.Read(data, 0, data.Length);
                 Array.Resize(ref data, bytesRead);
                 recievedData.Add(data);
                 remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
@@ -109,7 +121,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     client.Close();
                     return;
                 }
-                await Task.Run(() => ServerListen());
+                ServerListen();
                 ConncetionRunning = true;
             }
             else
@@ -121,10 +133,14 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private void ConnectToServer()
         {
+            try
+            {
                 byte[] confirmation = new byte[1];
                 client.Connect(node2.IPEndPoint);
-                client.GetStream().Write(Encoding.ASCII.GetBytes($"{node1.IP};{node1.Port.ToString()}"), 0, 5);
-                client.GetStream().Read(confirmation, 0, 1);
+                clientStream = client.GetStream();
+                byte[] IpAndPortOfTheServer = Encoding.ASCII.GetBytes($"{node1.IP.ToString()};{node1.Port.ToString()}");
+                clientStream.Write(IpAndPortOfTheServer, 0, 5);
+                clientStream.Read(confirmation, 0, 1);
                 if (confirmation[0] == 1)
                 {
                     return;
@@ -133,21 +149,28 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 {
                     throw new Exception("Connection failed");
                 }
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
+                return;
+            }
             return;
         }
-        private async Task<Task> ServerListen()
+        private void ServerListen()
         {
             try 
             {
                 server.Start();
                 remoteClient = server.AcceptTcpClient();
+                remoteClientStream = remoteClient.GetStream();
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
-                return Task.CompletedTask;
+                return;
             }
-            return Task.CompletedTask;
+            return;
         }
     }
 }

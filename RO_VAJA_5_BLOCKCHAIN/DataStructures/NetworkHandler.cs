@@ -12,28 +12,28 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class NetworkHandler: INotifyPropertyChanged
     {
-        public ObservableCollection<Connection> Connections { get; private set; } = new ObservableCollection<Connection>();
+        public ObservableCollection<Connection> _connections { get; private set; } = new ObservableCollection<Connection>();
         public ObservableCollection<Block> _ledger = new ObservableCollection<Block>();
         public event PropertyChangedEventHandler? PropertyChanged;
-        private StandardConnectionServer StdServer = new StandardConnectionServer(10548);
+        private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
         public bool RunLedgerUpdate = false;
 
         public NetworkHandler() {}
         public NetworkHandler(int StdServerPort) {
-            StdServer.Port = StdServerPort;
+            _stdServer._port = StdServerPort;
         }
-        public int StdServerPort
+        public StandardConnectionServer StdServer
         {
-            get { return StdServer.Port; }
+            get { return _stdServer; }
             set
             {
-                StdServer.Port = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StdServerPort"));
+                _stdServer = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("StdServer"));
             }
         }
         public bool AddNode(Node node)
         {
-           if (Connections.Any(x => x.node2 == node))
+           if (_connections.Any(x => x._node2 == node))
            {
                return false;
            }
@@ -42,11 +42,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            return true;
         }
         public void StartStdServer() {
-           Task.Run(() => StdServer.StartStandardServer(Connections));
+           Task.Run(() => _stdServer.StartStandardServer(_connections));
         }
         public bool SendBlock(Block block)
         {
-           foreach (Connection connection in Connections)
+           foreach (Connection connection in _connections)
            {
                connection.Send(block.ToByteArray());
            }
@@ -67,11 +67,20 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            while (RunLedgerUpdate)
            {
                await Task.Delay(100);
-               foreach (Connection connection in Connections)
+               foreach (Connection connection in _connections)
                {
                    Ledger.Add(new Block(connection.PopRecieved()));
                }
            }
+        }
+        public ObservableCollection<Connection> Connections
+        {
+            get { return _connections; }
+            set
+            {
+                _connections = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connections"));
+            }
         }
     }
 }

@@ -38,7 +38,7 @@
                 </ListView.ItemTemplate>
             </ListView>
             <ListView Grid.Column="1" Name="TextsListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
-            ItemsSource="{Binding networkHandler}">
+            ItemsSource="{Binding networkHandler.Connections}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -46,8 +46,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <Label Grid.Row="0" FontSize="16" Content="{Binding Data}"></Label>
-                            <Label Margin="10, 0, 0, 0" Grid.Row="1" FontSize="14" Content="{Binding TimeStamp}"></Label>
+                            <Label Grid.Row="0" FontSize="14" Content="{Binding Node2.IP}"></Label>
+                            <Label Grid.Row="1" FontSize="14" Content="{Binding Node2.Port}"></Label>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -59,7 +59,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0">Local Standard Server Port:</Label>
-            <Label Grid.Column="1" Content="{Binding networkHandler.StdServerPort}"></Label>
+            <Label Grid.Column="1" Content="{Binding networkHandler.StdServer.Port}"></Label>
         </Grid>
     </Grid>
 </Window>

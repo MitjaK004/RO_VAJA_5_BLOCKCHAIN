@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -9,16 +10,17 @@ using System.Windows;
 
 namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
-    public class Connection
+    public class Connection : INotifyPropertyChanged
     {
         public static int StdServerPort = 10548;
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
-        public Node node1 { get; private set; } = new Node();
-        public Node node2 { get; private set; } = new Node();
+        public Node _node1 { get; private set; } = new Node();
+        public Node _node2 { get; private set; } = new Node();
         public bool ConncetionRunning = false;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         TcpClient client;
         NetworkStream clientStream;
@@ -27,18 +29,18 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         TcpListener server;
         public Connection(Node node1, Node node2)
         {
-            this.node1 = node1;
-            this.node2 = node2;
+            this._node1 = node1;
+            this._node2 = node2;
             client = new TcpClient(node2.IPEndPoint);
             server = new TcpListener(node1.IPEndPoint);
             RunConnection(false);
         }
         public Connection(Node node2)
         {
-            this.node2 = node2;
-            this.node1 = new Node("127.0.0.1", defaultLocalPort++);
+            this._node2 = node2;
+            this._node1 = new Node("127.0.0.1", defaultLocalPort++);
             client = new TcpClient();
-            server = new TcpListener(node1.IPEndPoint);
+            server = new TcpListener(_node1.IPEndPoint);
             RunConnection(false);
         }
         private void ConnctToClientSServer()
@@ -50,13 +52,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 Array.Resize(ref buffer, bytesRead);
                 string res = Encoding.UTF8.GetString(buffer);
                 string[] ipPort = res.Split(';');
-                node2.IP = ipPort[0];
-                node2.Port = int.Parse(ipPort[1]);
+                _node2.IP = ipPort[0];
+                _node2.Port = int.Parse(ipPort[1]);
                 byte[] confirmation = new byte[1];
                 confirmation[0] = 1;
                 remoteClientStream.Write(confirmation, 0, confirmation.Length);
                 client = new TcpClient();
-                client.Connect(node2.IPEndPoint);
+                client.Connect(_node2.IPEndPoint);
             }
             catch (Exception e)
             {
@@ -66,7 +68,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Connection(Node node1, TcpListener _server, TcpClient _rclient)
         {
-            this.node1 = node1;
+            this._node1 = node1;
             server = _server;
             remoteClient = _rclient;
             remoteClientStream = remoteClient.GetStream();
@@ -130,15 +132,18 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 ConncetionRunning = true;
             }
             Task.Run(() => Reciever());
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node1"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node2"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connection"));
         }
         private void ConnectToServer()
         {
             try
             {
                 byte[] confirmation = new byte[1];
-                client.Connect(node2.IPEndPoint);
+                client.Connect(_node2.IPEndPoint);
                 clientStream = client.GetStream();
-                byte[] IpAndPortOfTheServer = Encoding.ASCII.GetBytes($"{node1.IP.ToString()};{node1.Port.ToString()}");
+                byte[] IpAndPortOfTheServer = Encoding.ASCII.GetBytes($"{_node1.IP.ToString()};{_node1.Port.ToString()}");
                 clientStream.Write(IpAndPortOfTheServer, 0, IpAndPortOfTheServer.Count());
                 clientStream.Read(confirmation, 0, 1);
                 if (confirmation[0] == 1)
@@ -171,6 +176,14 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 return;
             }
             return;
+        }
+        public Node Node1
+        {
+            get { return _node1; }
+        }
+        public Node Node2
+        {
+            get { return _node2; }
         }
     }
 }

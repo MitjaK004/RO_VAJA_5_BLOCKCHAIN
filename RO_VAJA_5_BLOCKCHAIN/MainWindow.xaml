@@ -46,8 +46,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            <Label Grid.Row="0" FontSize="14" Content="{Binding Node2.IP}"></Label>
-                            <Label Grid.Row="1" FontSize="14" Content="{Binding Node2.Port}"></Label>
+                            <Label Grid.Row="0" FontSize="14" Content="{Binding RemoteNode.IP}"></Label>
+                            <Label Grid.Row="1" FontSize="14" Content="{Binding RemoteNode.Port}"></Label>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

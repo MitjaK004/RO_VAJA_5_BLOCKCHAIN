@@ -10,8 +10,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Node: INotifyPropertyChanged
     {
-        private static int idCounter = 1;
-        private int _id { get; set; }
+        private string _id { get; set; }
         private string _iP { get; set; }
         private int _port { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -24,36 +23,31 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Node()
         { 
-            this._id = idCounter++;
+            this._id = "0";
             this._iP = "127.0.0.1";
             this._port = 10548;
         }
-        public Node(int _Port)
+        public Node(string id)
         {
-            this._id = idCounter++;
+            this._id = id;
+            this._iP = "127.0.0.1";
+            this._port = 10548;
+        }
+        public Node(string id, int _Port)
+        {
+            this._id = id;
             this._iP = "127.0.0.1";
             this._port = _Port;
         }
-        public Node(string IP, int Port)
-        {
-            this._id = idCounter++;
-            this._iP = IP;
-            this._port = Port;
-        }
-        public Node(int id, string IP, int Port)
+        public Node(string id, string IP, int Port)
         {
             this._id = id;
             this._iP = IP;
             this._port = Port;
         }
-        public int Id
+        public string Id
         {
             get { return _id; }
-            set
-            {
-                _id = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Id"));
-            }
         }
         public string IP
         {
@@ -72,6 +66,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 _port = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Port"));
             }
+        }
+        public static string GenerateUUID()
+        {
+            return Guid.NewGuid().ToString();
         }
     }
 }

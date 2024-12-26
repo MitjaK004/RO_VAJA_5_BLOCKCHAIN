@@ -17,10 +17,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public event PropertyChangedEventHandler? PropertyChanged;
         private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
         public bool RunLedgerUpdate = false;
-
-        public NetworkHandler() {}
+        private string _localNodeId = Node.GenerateUUID();
+        public NetworkHandler() {
+            Connection.LocalNodeId = _localNodeId;
+        }
         public NetworkHandler(int StdServerPort) {
             _stdServer._port = StdServerPort;
+            Connection.LocalNodeId = _localNodeId;
         }
         public StandardConnectionServer StdServer
         {
@@ -33,7 +36,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public bool AddNode(Node node)
         {
-           if (_connections.Any(x => x._node2 == node) && _connections.Any(x => x._node1 == node))
+           if (_connections.Any(x => x._remoteNode == node) && _connections.Any(x => x._localNode == node))
            {
                return false;
            }
@@ -60,6 +63,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                _ledger = value;
                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
            }
+        }
+        public string LocalNodeId
+        {
+            get { return _localNodeId; }
         }
         private async Task UpdateLedger()
         {

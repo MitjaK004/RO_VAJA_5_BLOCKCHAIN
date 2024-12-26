@@ -12,12 +12,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Connection : INotifyPropertyChanged
     {
+        public static string LocalNodeId = "0";
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
-        public Node _node1 { get; private set; } = new Node();
-        public Node _node2 { get; private set; } = new Node();
+        public Node _localNode { get; private set; } = new Node(LocalNodeId);
+        public Node _remoteNode { get; private set; }
         public bool ConncetionRunning = false;
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -26,49 +27,27 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         TcpClient remoteClient;
         NetworkStream remoteClientStream;
         TcpListener server;
-        public Connection(Node node1, Node node2)
+        public Connection(Node localNode, Node remoteNode)
         {
-            this._node1 = node1;
-            this._node2 = node2;
-            client = new TcpClient(node2.IPEndPoint);
-            server = new TcpListener(node1.IPEndPoint);
+            this._localNode = localNode;
+            this._remoteNode = remoteNode;
+            client = new TcpClient(remoteNode.IPEndPoint);
+            server = new TcpListener(localNode.IPEndPoint);
             RunConnection(false);
         }
-        public Connection(Node node2)
+        public Connection(Node remoteNode)
         {
-            this._node2 = node2;
-            FindAvailablePort();
-            this._node1 = new Node("127.0.0.1", defaultLocalPort++);
+            this._remoteNode = remoteNode;
+            FindAvailableLocalPort();
+            this._localNode = new Node(LocalNodeId, "127.0.0.1", defaultLocalPort++);
             client = new TcpClient();
-            server = new TcpListener(_node1.IPEndPoint);
+            server = new TcpListener(_localNode.IPEndPoint);
             RunConnection(false);
         }
-        private void ConnctToClientSServer()
+        
+        public Connection(Node localNode, TcpListener _server, TcpClient _rclient)
         {
-            try
-            {
-                byte[] buffer = new byte[MaxBufferSize];
-                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
-                Array.Resize(ref buffer, bytesRead);
-                string res = Encoding.UTF8.GetString(buffer);
-                string[] ipPort = res.Split(';');
-                _node2.IP = ipPort[0];
-                _node2.Port = int.Parse(ipPort[1]);
-                byte[] confirmation = new byte[1];
-                confirmation[0] = 1;
-                remoteClientStream.Write(confirmation, 0, confirmation.Length);
-                client = new TcpClient();
-                client.Connect(_node2.IPEndPoint);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
-                return;
-            }
-        }
-        public Connection(Node node1, TcpListener _server, TcpClient _rclient)
-        {
-            this._node1 = node1;
+            this._localNode = localNode;
             server = _server;
             remoteClient = _rclient;
             remoteClientStream = remoteClient.GetStream();
@@ -141,10 +120,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             try
             {
                 byte[] confirmation = new byte[1];
-                client.Connect(_node2.IPEndPoint);
+                client.Connect(_remoteNode.IPEndPoint);
                 clientStream = client.GetStream();
-                byte[] IpAndPortOfTheServer = Encoding.ASCII.GetBytes($"{_node1.IP.ToString()};{_node1.Port.ToString()}");
-                clientStream.Write(IpAndPortOfTheServer, 0, IpAndPortOfTheServer.Count());
+                byte[] IdIpPort = Encoding.ASCII.GetBytes($"{LocalNodeId};{_localNode.IP.ToString()};{_localNode.Port.ToString()}");
+                clientStream.Write(IdIpPort, 0, IdIpPort.Count());
                 clientStream.Read(confirmation, 0, 1);
                 if (confirmation[0] == 1)
                 {
@@ -160,7 +139,28 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
                 return;
             }
-            return;
+        }
+        private void ConnctToClientSServer()
+        {
+            try
+            {
+                byte[] buffer = new byte[MaxBufferSize];
+                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
+                Array.Resize(ref buffer, bytesRead);
+                string res = Encoding.UTF8.GetString(buffer);
+                string[] idIpPort = res.Split(';');
+                _remoteNode = new Node(idIpPort[0], idIpPort[1], int.Parse(idIpPort[2]));
+                byte[] confirmation = new byte[1];
+                confirmation[0] = 1;
+                remoteClientStream.Write(confirmation, 0, confirmation.Length);
+                client = new TcpClient();
+                client.Connect(_remoteNode.IPEndPoint);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
+                return;
+            }
         }
         private void ServerListen()
         {
@@ -177,28 +177,48 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             }
             return;
         }
-        public Node Node1
+        public Node LocalNode
         {
-            get { return _node1; }
+            get { return _localNode; }
         }
-        public Node Node2
+        public Node RemoteNode
         {
-            get { return _node2; }
+            get { return _remoteNode; }
         }
-        public void FindAvailablePort()
+        public void FindAvailableLocalPort()
         {
+            defaultLocalPort = FindAvailablePort(defaultLocalPort);
+            if(defaultLocalPort == -1)
+            {
+                defaultLocalPort = FindAvailablePort(0);
+                if(defaultLocalPort == -1)
+                {
+                    MessageBox.Show("No available ports", "ERROR");
+                }
+            }
+        }
+        public static int FindAvailablePort(int start = 25351)
+        {
+            int port = start;
             while (true)
             {
                 try
                 {
-                    TcpListener listener = new TcpListener(System.Net.IPAddress.Parse("127.0.0.1"), defaultLocalPort);
+                    TcpListener listener = new TcpListener(System.Net.IPAddress.Parse("127.0.0.1"), port);
                     listener.Start();
                     listener.Stop();
-                    return;
+                    return port;
                 }
                 catch
                 {
-                    defaultLocalPort++;
+                    if (port >= 65534)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        port++;
+                    }
                 }
             }
         }

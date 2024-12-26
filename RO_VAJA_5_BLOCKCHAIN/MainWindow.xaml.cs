@@ -28,7 +28,7 @@ namespace RO_VAJA_5_BLOCKCHAIN
 
         private void AddNodeBtn_Click(object sender, RoutedEventArgs e)
         {
-            AddNodeWindow ANW = new AddNodeWindow(Connection.StdServerPort);
+            AddNodeWindow ANW = new AddNodeWindow(VM.networkHandler.StdServer.Port);
             if (ANW.ShowDialog() == true)
             {
                 VM.networkHandler.AddNode(ANW.node);

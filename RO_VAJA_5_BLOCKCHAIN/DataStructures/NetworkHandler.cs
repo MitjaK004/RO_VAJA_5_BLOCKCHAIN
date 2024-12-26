@@ -33,7 +33,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public bool AddNode(Node node)
         {
-           if (_connections.Any(x => x._node2 == node))
+           if (_connections.Any(x => x._node2 == node) && _connections.Any(x => x._node1 == node))
            {
                return false;
            }

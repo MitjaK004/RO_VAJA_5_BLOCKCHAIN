@@ -12,7 +12,6 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Connection : INotifyPropertyChanged
     {
-        public static int StdServerPort = 10548;
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
         private List<byte[]> recievedData = new List<byte[]>();
@@ -38,6 +37,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Connection(Node node2)
         {
             this._node2 = node2;
+            FindAvailablePort();
             this._node1 = new Node("127.0.0.1", defaultLocalPort++);
             client = new TcpClient();
             server = new TcpListener(_node1.IPEndPoint);
@@ -184,6 +184,23 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Node Node2
         {
             get { return _node2; }
+        }
+        public void FindAvailablePort()
+        {
+            while (true)
+            {
+                try
+                {
+                    TcpListener listener = new TcpListener(System.Net.IPAddress.Parse("127.0.0.1"), defaultLocalPort);
+                    listener.Start();
+                    listener.Stop();
+                    return;
+                }
+                catch
+                {
+                    defaultLocalPort++;
+                }
+            }
         }
     }
 }

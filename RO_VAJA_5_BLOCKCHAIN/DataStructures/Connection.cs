@@ -16,8 +16,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public static int defaultLocalPort = 25351;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
-        public Node node1 { get; private set; }
-        public Node node2 { get; private set; }
+        public Node node1 { get; private set; } = new Node();
+        public Node node2 { get; private set; } = new Node();
         public bool ConncetionRunning = false;
 
         TcpClient client;
@@ -139,7 +139,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 client.Connect(node2.IPEndPoint);
                 clientStream = client.GetStream();
                 byte[] IpAndPortOfTheServer = Encoding.ASCII.GetBytes($"{node1.IP.ToString()};{node1.Port.ToString()}");
-                clientStream.Write(IpAndPortOfTheServer, 0, 5);
+                clientStream.Write(IpAndPortOfTheServer, 0, IpAndPortOfTheServer.Count());
                 clientStream.Read(confirmation, 0, 1);
                 if (confirmation[0] == 1)
                 {

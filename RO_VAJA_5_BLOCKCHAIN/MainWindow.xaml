@@ -15,6 +15,7 @@
         <Menu VerticalAlignment="Center">
             <MenuItem Header="Nodes">
                 <MenuItem x:Name="AddNodeBtn" Header="Add Node" Click="AddNodeBtn_Click"></MenuItem>
+                <MenuItem x:Name="AddNewRandomBlock" Header="Add New Random Block" Click="AddNewRandomBlock_Click"></MenuItem>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
@@ -38,7 +39,7 @@
                 </ListView.ItemTemplate>
             </ListView>
             <ListView Grid.Column="1" Name="TextsListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
-            ItemsSource="{Binding networkHandler.Connections}">
+            ItemsSource="{Binding blockchain.Connections}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -59,7 +60,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0">Local Standard Server Port:</Label>
-            <Label Grid.Column="1" Content="{Binding networkHandler.StdServer.Port}"></Label>
+            <Label Grid.Column="1" Content="{Binding blockchain.StdServer.Port}"></Label>
         </Grid>
     </Grid>
 </Window>

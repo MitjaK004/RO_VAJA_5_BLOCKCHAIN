@@ -28,11 +28,16 @@ namespace RO_VAJA_5_BLOCKCHAIN
 
         private void AddNodeBtn_Click(object sender, RoutedEventArgs e)
         {
-            AddNodeWindow ANW = new AddNodeWindow(VM.networkHandler.StdServer.Port);
+            AddNodeWindow ANW = new AddNodeWindow(10548);
             if (ANW.ShowDialog() == true)
             {
-                VM.networkHandler.AddNode(ANW.node);
+                VM.blockchain.AddNode(ANW.node);
             }
+        }
+
+        private void AddNewRandomBlock_Click(object sender, RoutedEventArgs e)
+        {
+            VM.blockchain.AddBlock(new DataStructures.Block(VM.blockchain.Ledger.Count, "RandomString(10)blallasdhasd", System.DateTime.Now, "0"));
         }
     }
 }

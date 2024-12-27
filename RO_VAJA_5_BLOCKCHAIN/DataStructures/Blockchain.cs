@@ -10,20 +10,24 @@ using System.Windows;
 
 namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
-    public class NetworkHandler: INotifyPropertyChanged
+    public class Blockchain: INotifyPropertyChanged
     {
         public ObservableCollection<Connection> _connections { get; private set; } = new ObservableCollection<Connection>();
         public ObservableCollection<Block> _ledger = new ObservableCollection<Block>();
         public event PropertyChangedEventHandler? PropertyChanged;
         private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
-        public bool RunLedgerUpdate = false;
+        public bool RunLedgerUpdate = true;
         private string _localNodeId = Node.GenerateUUID();
-        public NetworkHandler() {
+        public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
+            StartStdServer();
+            Task.Run(() => UpdateLedger());
         }
-        public NetworkHandler(int StdServerPort) {
+        public Blockchain(int StdServerPort) {
             _stdServer._port = StdServerPort;
             Connection.LocalNodeId = _localNodeId;
+            StartStdServer();
+            Task.Run(() => UpdateLedger());
         }
         public StandardConnectionServer StdServer
         {
@@ -70,15 +74,24 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private async Task UpdateLedger()
         {
-           RunLedgerUpdate = false;
-           while (RunLedgerUpdate)
-           {
-               await Task.Delay(100);
-               foreach (Connection connection in _connections)
-               {
-                   Ledger.Add(new Block(connection.PopRecieved()));
-               }
-           }
+            while (RunLedgerUpdate)
+            {
+                await Task.Delay(100);
+                if (Connection.NewDataRecieved)
+                {
+                    foreach (Connection connection in _connections)
+                    {
+                        while (connection.RecievedData())
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                Ledger.Add(new Block(connection.PopRecieved()));
+                            });
+                        }
+                    }
+                    Connection.NewDataRecieved = false;
+                }
+            }
         }
         public ObservableCollection<Connection> Connections
         {
@@ -88,6 +101,15 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 _connections = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connections"));
             }
+        }
+        public void AddBlock(Block block)
+        {
+            _ledger.Add(block);
+            foreach (Connection connection in _connections)
+            {
+                connection.Send(block.ToByteArray());
+            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
         }
     }
 }

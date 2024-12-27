@@ -15,6 +15,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public static string LocalNodeId = "0";
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
+        public static bool NewDataRecieved = false;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
         public Node _localNode { get; private set; } = new Node(LocalNodeId);
@@ -59,6 +60,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             recievedData.RemoveAt(0);
             return data;
         }
+        public bool RecievedData()
+        {
+            return recievedData.Count > 0;
+        }
         private async Task Reciever()
         {
             while (ConncetionRunning)
@@ -70,6 +75,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 Array.Resize(ref data, bytesRead);
                 recievedData.Add(data);
                 remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                NewDataRecieved = true;
             }
         }
         public void Send(byte[] data)

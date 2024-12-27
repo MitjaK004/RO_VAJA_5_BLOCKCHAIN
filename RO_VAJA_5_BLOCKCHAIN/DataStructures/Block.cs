@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Block
     {
-        public int Id { get; set; } = 0;
-        public string Data { get; set; } = "";
-        public DateTime TimeStamp { get; set; } = DateTime.Now;
-        public string Hash { get; set; } = "";
-        public string PreviousHash { get; set; } = "";
+        public int Id { get; } = 0;
+        public string Data { get; } = "";
+        public DateTime TimeStamp { get; } = DateTime.Now;
+        public string Hash { get; } = "";
+        public string PreviousHash { get; } = "";
 
         public Block(int index, string data, DateTime timeStamp, string hash, string previousHash)
         {
@@ -22,13 +24,25 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             Hash = hash;
             PreviousHash = previousHash;
         }
+        public Block(int index, string data, DateTime timeStamp, string previousHash)
+        {
+            Id = index;
+            Data = data;
+            TimeStamp = timeStamp;
+            PreviousHash = previousHash;
+            Hash = GetHashString(this.ToString());
+        }
         public Block(byte[] data) {
-            Block block = FromByteArray(data);
-            Id = block.Id;
-            Data = block.Data;
-            TimeStamp = block.TimeStamp;
-            Hash = block.Hash;
-            PreviousHash = block.PreviousHash;
+            List<byte> byteList = new List<byte>(data);
+            Id = BitConverter.ToInt32(byteList.GetRange(0, 4).ToArray(), 0);
+            byteList.RemoveRange(0, 5);
+            Data = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
+            byteList.RemoveRange(0, byteList.IndexOf(10) + 1);
+            TimeStamp = new DateTime(BitConverter.ToInt64(byteList.GetRange(0, 8).ToArray(), 0));
+            byteList.RemoveRange(0, 9);
+            Hash = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
+            byteList.RemoveRange(0, byteList.IndexOf(10) + 1);
+            PreviousHash = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
         }
         public Block() { }
         public string ToString()
@@ -65,6 +79,19 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             string previousHash = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
         
             return new Block(id, dataString, new DateTime(ticks), hash, previousHash);
+        }
+        public static byte[] GetHash(string inputString)
+        {
+            using (HashAlgorithm algorithm = SHA256.Create())
+                return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+        }
+        public static string GetHashString(string inputString)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in GetHash(inputString))
+                sb.Append(b.ToString("X2"));
+
+            return sb.ToString();
         }
     }
 }

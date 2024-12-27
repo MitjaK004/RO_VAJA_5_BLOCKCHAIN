@@ -54,9 +54,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             PreviousHash = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
         }
         public Block() { }
-        public string ToString(string separator = "")
+        public string ToString(string separator = "", bool showHash = false)
         {
-            return $"{Index}{separator}{Difficulty}{separator}{Nonce.ToString()}{separator}{Data}{separator}{TimeStamp}{separator}{Hash}{separator}{PreviousHash}";
+            if (showHash)
+                return $"{Index}{separator}{Difficulty}{separator}{Nonce.ToString()}{separator}{Data}{separator}{TimeStamp}{separator}{Hash}{separator}{PreviousHash}";
+            else
+                return $"{Index}{separator}{Difficulty}{separator}{Nonce.ToString()}{separator}{Data}{separator}{TimeStamp}{separator}{PreviousHash}";
         }
         public byte[] ToByteArray()
         {
@@ -120,6 +123,9 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 return false;
             string target = new string('0', Difficulty);
             Nonce = 0;
+            Hash = GetHashString(this.ToString());
+            Hash = GetHashString(this.ToString());
+            Hash = GetHashString(this.ToString());
             while (!Hash.StartsWith(target))
             {
                 Nonce++;

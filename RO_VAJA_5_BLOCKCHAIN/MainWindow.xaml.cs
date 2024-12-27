@@ -37,7 +37,7 @@ namespace RO_VAJA_5_BLOCKCHAIN
 
         private void AddNewRandomBlock_Click(object sender, RoutedEventArgs e)
         {
-            VM.blockchain.AddBlock(new DataStructures.Block(VM.blockchain.Ledger.Count, VM.blockchain.Difficulty, "RandomString(10)blallasdhasd", System.DateTime.Now, "0"));
+            VM.blockchain.AddBlock(new DataStructures.Block(VM.blockchain.Ledger.Count, VM.blockchain.Difficulty, "RandomString(10)blallasdhasd", System.DateTime.Now, VM.blockchain.GetLastBlockHash()));
         }
     }
 }

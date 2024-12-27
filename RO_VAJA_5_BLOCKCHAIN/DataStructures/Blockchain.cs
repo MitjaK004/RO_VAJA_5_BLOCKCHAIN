@@ -149,5 +149,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             Task.Run(() => MineBlock(block));
         }
+        public string GetLastBlockHash()
+        {
+            if (_ledger.Count == 0)
+                return "0";
+            return _ledger.Last().Hash;
+        }
     }
 }

@@ -15,6 +15,8 @@
         <Menu VerticalAlignment="Center">
             <MenuItem Header="Nodes">
                 <MenuItem x:Name="AddNodeBtn" Header="Add Node" Click="AddNodeBtn_Click"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Block">
                 <MenuItem x:Name="AddNewRandomBlock" Header="Add New Random Block" Click="AddNewRandomBlock_Click"></MenuItem>
             </MenuItem>
         </Menu>

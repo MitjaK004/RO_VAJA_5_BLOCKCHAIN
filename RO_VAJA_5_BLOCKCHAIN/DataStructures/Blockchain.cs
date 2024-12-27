@@ -93,9 +93,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                     Ledger.Add(block);
                                 });
                             }
+                            else
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    MessageBox.Show("Invalid block recieved");
+                                });
+                            }
                         }
+                        Connection.NewDataRecieved = false;
                     }
-                    Connection.NewDataRecieved = false;
                 }
             }
         }

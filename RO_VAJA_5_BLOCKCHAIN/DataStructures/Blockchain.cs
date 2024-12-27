@@ -86,11 +86,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                         while (connection.RecievedData())
                         {
                             Block block = new Block(connection.PopRecieved());
-                            ValidateBlock(block);
-                            Application.Current.Dispatcher.Invoke(() =>
+                            if (ValidateBlock(block))
                             {
-                                Ledger.Add(block);
-                            });
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    Ledger.Add(block);
+                                });
+                            }
                         }
                     }
                     Connection.NewDataRecieved = false;

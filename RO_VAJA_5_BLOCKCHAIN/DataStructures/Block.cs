@@ -14,14 +14,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
     {
         public int Index { get; } = 0;
         public int Difficulty { get; } = 1;
+        public int Nonce { get; private set; } = 0;
         public string Data { get; } = "";
         public DateTime TimeStamp { get; } = DateTime.Now;
         public string Hash { get; private set; } = "NULL";
         public string PreviousHash { get; } = "";
-        public Block(int index, int dificulty, string data, DateTime timeStamp, string hash, string previousHash)
+        public Block(int index, int dificulty, int nonce, string data, DateTime timeStamp, string hash, string previousHash)
         {
             Index = index;
             Difficulty = dificulty;
+            Nonce = nonce;
             Data = data;
             TimeStamp = timeStamp;
             Hash = hash;
@@ -41,6 +43,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             byteList.RemoveRange(0, 5);
             Difficulty = BitConverter.ToInt32(byteList.GetRange(0, 4).ToArray(), 0);
             byteList.RemoveRange(0, 5);
+            Nonce = BitConverter.ToInt32(byteList.GetRange(0, 4).ToArray(), 0);
+            byteList.RemoveRange(0, 5);
             Data = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
             byteList.RemoveRange(0, byteList.IndexOf(10) + 1);
             TimeStamp = new DateTime(BitConverter.ToInt64(byteList.GetRange(0, 8).ToArray(), 0));
@@ -52,7 +56,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Block() { }
         public string ToString(string separator = "")
         {
-            return $"{Index}{separator}{Difficulty}{separator}{Data}{separator}{TimeStamp}{separator}{Hash}{separator}{PreviousHash}";
+            return $"{Index}{separator}{Difficulty}{separator}{Nonce.ToString()}{separator}{Data}{separator}{TimeStamp}{separator}{Hash}{separator}{PreviousHash}";
         }
         public byte[] ToByteArray()
         {
@@ -61,6 +65,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             byteList.AddRange(BitConverter.GetBytes(Index));
             byteList.Add(10);
             byteList.AddRange(BitConverter.GetBytes(Difficulty));
+            byteList.Add(10);
+            byteList.AddRange(BitConverter.GetBytes(Nonce));
             byteList.Add(10);
             byteList.AddRange(Encoding.UTF8.GetBytes(Data));
             byteList.Add(10);
@@ -79,6 +85,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             byteList.RemoveRange(0, 5);
             int difficulty = BitConverter.ToInt32(byteList.GetRange(0, 4).ToArray(), 0);
             byteList.RemoveRange(0, 5);
+            int nonce = BitConverter.ToInt32(byteList.GetRange(0, 4).ToArray(), 0);
+            byteList.RemoveRange(0, 5);
             string dataString = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
             byteList.RemoveRange(0, byteList.IndexOf(10) + 1);
             long ticks = BitConverter.ToInt64(byteList.GetRange(0, 8).ToArray(), 0);
@@ -87,7 +95,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             byteList.RemoveRange(0, byteList.IndexOf(10) + 1);
             string previousHash = Encoding.UTF8.GetString(byteList.GetRange(0, byteList.IndexOf(10)).ToArray());
         
-            return new Block(id, difficulty, dataString, new DateTime(ticks), hash, previousHash);
+            return new Block(id, difficulty, nonce, dataString, new DateTime(ticks), hash, previousHash);
         }
         public static byte[] GetHash(string inputString)
         {
@@ -102,16 +110,20 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 
             return sb.ToString();
         }
+        public string GetHash()
+        {
+            return GetHashString(this.ToString());
+        }
         public bool GenerateHash()
         {
             if(Hash != "NULL")
                 return false;
             string target = new string('0', Difficulty);
-            int nonce = 0;
+            Nonce = 0;
             while (!Hash.StartsWith(target))
             {
-                nonce++;
-                Hash = GetHashString($"{this.ToString()}{nonce}");
+                Nonce++;
+                Hash = GetHashString(this.ToString());
             }
             return true;
         }

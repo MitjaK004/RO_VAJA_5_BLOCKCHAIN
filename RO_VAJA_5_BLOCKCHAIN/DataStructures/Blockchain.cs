@@ -110,6 +110,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 return false;
             }
+            if (block.Hash != block.GetHash())
+            {
+                return false;
+            }
             return true;
         }
         public ObservableCollection<Connection> Connections

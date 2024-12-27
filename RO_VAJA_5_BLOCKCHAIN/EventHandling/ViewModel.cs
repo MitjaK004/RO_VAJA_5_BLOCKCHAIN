@@ -32,7 +32,6 @@ namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
             }
         }
         public ViewModel() {
-            blockchain.Ledger.Add(new Block(0, "Genesis Block", DateTime.Now, "0", "0"));
         }
     }
 }

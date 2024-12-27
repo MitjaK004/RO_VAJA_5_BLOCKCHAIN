@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Net.Sockets;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,6 +19,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
         public bool RunLedgerUpdate = true;
         private string _localNodeId = Node.GenerateUUID();
+        public int Difficulty { get; private set; } = 1;
         public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
             StartStdServer();
@@ -83,15 +85,30 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     {
                         while (connection.RecievedData())
                         {
+                            Block block = new Block(connection.PopRecieved());
+                            ValidateBlock(block);
                             Application.Current.Dispatcher.Invoke(() =>
                             {
-                                Ledger.Add(new Block(connection.PopRecieved()));
+                                Ledger.Add(block);
                             });
                         }
                     }
                     Connection.NewDataRecieved = false;
                 }
             }
+        }
+        private bool ValidateBlock(Block block)
+        {
+            if (block.Index == 0)
+            {
+                return true;
+            }
+            Block previousBlock = _ledger[block.Index - 1];
+            if (block.PreviousHash != previousBlock.Hash)
+            {
+                return false;
+            }
+            return true;
         }
         public ObservableCollection<Connection> Connections
         {
@@ -102,14 +119,22 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connections"));
             }
         }
+        private async Task MineBlock(Block block)
+        {
+            block.GenerateHash();
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _ledger.Add(block);
+                foreach (Connection connection in _connections)
+                {
+                    connection.Send(block.ToByteArray());
+                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+            });
+        }
         public void AddBlock(Block block)
         {
-            _ledger.Add(block);
-            foreach (Connection connection in _connections)
-            {
-                connection.Send(block.ToByteArray());
-            }
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+            Task.Run(() => MineBlock(block));
         }
     }
 }

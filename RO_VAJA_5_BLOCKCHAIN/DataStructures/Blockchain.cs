@@ -123,6 +123,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                     //Če je naš ledger predolg, pošljemo daljšega
                                     connection.SendLongerLedger();
                                 }
+                            }
                         }
                         Connection.NewDataRecieved = false;
                     }

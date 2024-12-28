@@ -29,7 +29,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public StandardConnectionServer() { RunStdServer = true;  }
         public StandardConnectionServer(int port) { this._port = port; RunStdServer = true; }
-        public async Task StartStandardServer(ObservableCollection<Connection> cl, ObservableCollection<Block> ledger)
+        public async Task StartStandardServer(ObservableCollection<Connection> cl, Action<ObservableCollection<Block>> ledgerSetter, Func<ObservableCollection<Block>> ledgerGetter)
         {
             await Task.Run(async () =>
             {
@@ -41,7 +41,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     TcpClient client = await server.AcceptTcpClientAsync();
                     await App.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        cl.Add(new Connection(this.ToNode(), server, client, ledger));
+                        cl.Add(new Connection(this.ToNode(), server, client, ledgerSetter, ledgerGetter));
                         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connections"));
                     });
                     FindAvailablePort();

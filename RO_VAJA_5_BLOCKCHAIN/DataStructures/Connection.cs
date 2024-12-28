@@ -34,33 +34,36 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         TcpClient remoteClient;
         NetworkStream remoteClientStream;
         TcpListener server;
-        public Connection(Node localNode, Node remoteNode, ObservableCollection<Block> ledger)
+        public Connection(Node localNode, Node remoteNode, Action<ObservableCollection<Block>> ledgerSetter, Func<ObservableCollection<Block>> ledgerGetter)
         {
             this._localNode = localNode;
             this._remoteNode = remoteNode;
             client = new TcpClient(remoteNode.IPEndPoint);
             server = new TcpListener(localNode.IPEndPoint);
-            Ledger = ledger;
+            LedgerSetter = ledgerSetter;
+            LedgerGetter = ledgerGetter;
             RunConnection(false);
         }
-        public Connection(Node remoteNode, ObservableCollection<Block> ledger)
+        public Connection(Node remoteNode, Action<ObservableCollection<Block>> ledgerSetter, Func<ObservableCollection<Block>> ledgerGetter)
         {
             this._remoteNode = remoteNode;
             FindAvailableLocalPort();
             this._localNode = new Node(LocalNodeId, "127.0.0.1", defaultLocalPort++);
             client = new TcpClient();
             server = new TcpListener(_localNode.IPEndPoint);
-            Ledger = ledger;
+            LedgerSetter = ledgerSetter;
+            LedgerGetter = ledgerGetter;
             RunConnection(false);
         }
         
-        public Connection(Node localNode, TcpListener _server, TcpClient _rclient, ObservableCollection<Block> ledger)
+        public Connection(Node localNode, TcpListener _server, TcpClient _rclient, Action<ObservableCollection<Block>> ledgerSetter, Func<ObservableCollection<Block>> ledgerGetter)
         {
             this._localNode = localNode;
             server = _server;
             remoteClient = _rclient;
             remoteClientStream = remoteClient.GetStream();
-            Ledger = ledger;
+            LedgerSetter = ledgerSetter;
+            LedgerGetter = ledgerGetter;
             RunConnection(true);
         }
         public byte[] PopRecieved()
@@ -78,7 +81,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             ObservableCollection<Block> ledger = null;
             Application.Current.Dispatcher.Invoke(() =>
             {
-                ledger = Ledger;
+                ledger = LedgerGetter();
             });
             client.GetStream().Write(BitConverter.GetBytes(ledger.Count), 0, 4);
             client.GetStream().Read(new byte[1], 0, 1);
@@ -101,7 +104,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             }
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Ledger = ledger;
+                LedgerSetter(ledger);
             });
         }
         private async Task Reciever()

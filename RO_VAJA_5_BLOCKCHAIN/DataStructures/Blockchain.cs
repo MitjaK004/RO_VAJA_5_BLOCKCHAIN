@@ -63,12 +63,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            {
                return false;
            }
-           Connection connection = new Connection(node, Ledger);
+           Connection connection = new Connection(node, SetLedger, GetLedger);
            Connections.Add(connection);
            return true;
         }
         public void StartStdServer() {
-           Task.Run(() => _stdServer.StartStandardServer(_connections, Ledger));
+           Task.Run(() => _stdServer.StartStandardServer(_connections, SetLedger, GetLedger));
         }
         public bool SendBlock(Block block)
         {

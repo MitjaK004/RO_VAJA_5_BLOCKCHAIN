@@ -13,6 +13,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
     public class Connection : INotifyPropertyChanged
     {
         private readonly byte[] SEND_LEDGER_SIGNAL = new byte[] { 128, 128, 255, 255, 128 };
+        private readonly byte[] SEND_LEDGER_SIGNAL_RECV_READY = new byte[] { 255, 128, 255, 128, 255 };
         private readonly byte[] RECV_LEDGER_SIGNAL = new byte[] { 255, 128, 255, 128, 255 };
         public static string LocalNodeId = "0";
         public static int MaxBufferSize = 4096;
@@ -85,7 +86,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             }
         }
         private void RecieveLedger() { 
-            ObservableCollection<Block> ledger = new ObservableCollection<Block>;
+            ObservableCollection<Block> ledger = new ObservableCollection<Block>();
             int ledgerSize = BitConverter.ToInt32(InstantRecieveSync(), 0);
             byte[] confirmation = new byte[1];
             confirmation[0] = 1;
@@ -112,13 +113,20 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 Array.Resize(ref data, bytesRead);
                 if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
                 {
+                    InstantSendSync(RECV_LEDGER_SIGNAL);
                     SendLedger();
-                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
                 }
                 else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
                 {
+                    remoteClientStream.Write(SEND_LEDGER_SIGNAL_RECV_READY, 0, SEND_LEDGER_SIGNAL_RECV_READY.Length);
                     RecieveLedger();
-                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
+                }
+                else if(data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
+                {
+                    SendLedger();
+                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
                 }
                 else
                 {
@@ -145,7 +153,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private void InstantSendSync(byte[] data)
         {
-            byte[] confirmation = new byte[1];
+            byte[] confirmation = new byte[5];
             confirmation[0] = 0;
             while (confirmation[0] == 0)
             {

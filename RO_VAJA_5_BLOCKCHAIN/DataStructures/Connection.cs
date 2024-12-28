@@ -64,6 +64,64 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             return recievedData.Count > 0;
         }
+        private async void SendLedger(ObservableCollection<Block> ledger)
+        {
+            client.GetStream().Write(BitConverter.GetBytes(ledger.Count), 0, 4);
+            client.GetStream().Read(new byte[1], 0, 1);
+            foreach (Block block in ledger)
+            {
+                await InstantSend(block.ToByteArray());
+            }
+        }
+        private ObservableCollection<Block>? RecieveLedger() 
+        {
+            ObservableCollection<Block>? ledger = null;
+            byte[] buffer = new byte[4];
+            remoteClientStream.Read(buffer, 0, 4);
+            int count = BitConverter.ToInt32(buffer, 0);
+            byte[] confirmation = new byte[1];
+            confirmation[0] = 1;
+            remoteClientStream.Write(confirmation, 0, 1);
+            for(int i = 0; i < count; i++)
+            {
+                byte[] data = new byte[MaxBufferSize];
+                int bytesRead = remoteClientStream.Read(data, 0, data.Length);
+                Array.Resize(ref data, bytesRead);
+                ledger.Add(new Block(data));
+                remoteClientStream.Write(confirmation, 0, 1);
+            }
+            return ledger;
+        }
+        private void SendHashesUntilSignal(ObservableCollection<Block> ledger)
+        {
+            byte[] buffer = new byte[1];
+            while (buffer[0] == 2)
+            {
+                string hash = ledger.Last().Hash;
+                byte[] hashes = Encoding.UTF8.GetBytes(hash);
+                client.GetStream().Write(hashes, 0, hashes.Length);
+                client.GetStream().Read(buffer, 0, 1);
+            }
+        }
+        private void FindLastCorrectHash(ObservableCollection<Block> ledger)
+        {
+            byte[] buffer = new byte[MaxBufferSize];
+            byte[] confirm = new byte[1];
+            confirm[0] = 1;
+            string Hash = null;
+            int i = ledger.Count - 1;
+            do
+            {
+                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
+                Array.Resize(ref buffer, bytesRead);
+                Hash = Encoding.UTF8.GetString(buffer);
+                if (ledger[i].Hash == Hash)
+                    break;
+                i--;
+            } while (ledger[i].Hash != Hash);
+            confirm[0] = 2;
+            client.GetStream().Write(confirm, 0, 1);
+        }
         private async Task Reciever()
         {
             while (ConncetionRunning)
@@ -161,6 +219,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 remoteClientStream.Write(confirmation, 0, confirmation.Length);
                 client = new TcpClient();
                 client.Connect(_remoteNode.IPEndPoint);
+                clientStream = client.GetStream();
             }
             catch (Exception e)
             {

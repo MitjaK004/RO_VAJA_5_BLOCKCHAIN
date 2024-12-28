@@ -13,7 +13,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
     public class Block
     {
         public int Index { get; } = 0;
-        public int Difficulty { get; } = 1;
+        public int Difficulty { get; set; } = 1;
         public int Nonce { get; private set; } = 0;
         public string Data { get; } = "";
         public DateTime TimeStamp { get; } = DateTime.Now;
@@ -36,6 +36,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             TimeStamp = timeStamp;
             PreviousHash = previousHash;
             Difficulty = dificulty;
+        }
+        public Block(int index, string data, DateTime timeStamp, string previousHash)
+        {
+            Index = index;
+            Data = data;
+            TimeStamp = timeStamp;
+            PreviousHash = previousHash;
         }
         public Block(byte[] data) {
             List<byte> byteList = new List<byte>(data);

@@ -15,21 +15,36 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
     {
         public ObservableCollection<Connection> _connections { get; private set; } = new ObservableCollection<Connection>();
         public ObservableCollection<Block> _ledger = new ObservableCollection<Block>();
+        public ObservableCollection<Block> CostumBlockQueue = new ObservableCollection<Block>();
         public event PropertyChangedEventHandler? PropertyChanged;
         private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
         public bool RunLedgerUpdate = true;
+        public bool GenerateBlocksRunning = true;
         private string _localNodeId = Node.GenerateUUID();
-        public int Difficulty { get; private set; } = 1;
+        private readonly int SecondsBetweenNewBlocks = 10;
+        private readonly int BlocksBetweenDifficultyChange = 10;
+        public int _difficulty { get; private set; } = 1;
+        public int Difficulty
+        {
+            get { return _difficulty; }
+            private set
+            {
+                _difficulty = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Difficulty"));
+            }
+        }
         public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
             StartStdServer();
             Task.Run(() => UpdateLedger());
+            Task.Run(() => GenerateNewBlocks());
         }
         public Blockchain(int StdServerPort) {
             _stdServer._port = StdServerPort;
             Connection.LocalNodeId = _localNodeId;
             StartStdServer();
             Task.Run(() => UpdateLedger());
+            Task.Run(() => GenerateNewBlocks());
         }
         public StandardConnectionServer StdServer
         {
@@ -78,7 +93,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             while (RunLedgerUpdate)
             {
-                await Task.Delay(100);
+                await Task.Delay(5);
                 if (Connection.NewDataRecieved)
                 {
                     foreach (Connection connection in _connections)
@@ -97,7 +112,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
-                                    MessageBox.Show("Invalid block recieved");
+                                    //MessageBox.Show("Invalid block recieved");
                                 });
                             }
                         }
@@ -113,6 +128,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 return true;
             }
             Block previousBlock = _ledger[block.Index - 1];
+            if(block.Index != previousBlock.Index + 1)
+            {
+                return false;
+            }
             if (block.PreviousHash != previousBlock.Hash)
             {
                 return false;
@@ -132,7 +151,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connections"));
             }
         }
-        private async Task MineBlock(Block block)
+        private void MineBlock(Block block)
         {
             block.GenerateHash();
             Application.Current.Dispatcher.Invoke(() =>
@@ -145,15 +164,73 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
             });
         }
-        public void AddBlock(Block block)
+        private async Task GenerateNewBlocks()
         {
-            Task.Run(() => MineBlock(block));
+            int numBlocksBeforeDifficultyChange = BlocksBetweenDifficultyChange;
+            while (GenerateBlocksRunning)
+            {
+                await Task.Delay(100);
+                Block block;
+                if (numBlocksBeforeDifficultyChange <= 0)
+                {
+                    double averageTime = 0.0;
+                    ObservableCollection<Block>? blocks = null;
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        while (blocks == null)
+                            blocks = new ObservableCollection<Block>(_ledger);
+                    });
+                    for (int i = blocks.Count - 9; i < blocks.Count; i++)
+                    {
+                        averageTime += (blocks[i].TimeStamp - blocks[i - 1].TimeStamp).TotalSeconds;
+                    }
+                    averageTime /= 10;
+                    if (averageTime < SecondsBetweenNewBlocks)
+                    {
+                        Difficulty++;
+                    }
+                    else
+                    {
+                        Difficulty--;
+                    }
+                    numBlocksBeforeDifficultyChange = BlocksBetweenDifficultyChange;
+                }
+                if (CostumBlockQueue.Count > 0)
+                {
+                    block = CostumBlockQueue.First();
+                    block.Difficulty = _difficulty;
+                    MineBlock(block);
+                    CostumBlockQueue.Remove(block);
+                    numBlocksBeforeDifficultyChange--;
+                }
+                else
+                {
+                    block = new Block(Ledger.Count, _difficulty, RandomString(32), System.DateTime.Now, GetLastBlockHash());
+                    MineBlock(block);
+                    numBlocksBeforeDifficultyChange--;
+                }
+            }
         }
         public string GetLastBlockHash()
         {
             if (_ledger.Count == 0)
                 return "0";
             return _ledger.Last().Hash;
+        }
+        public void AddBlock(Block block)
+        {
+            CostumBlockQueue.Add(block);
+        }
+        private string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            StringBuilder sb = new StringBuilder();
+            Random random = new Random();
+            for (int i = 0; i < length; i++)
+            {
+                sb.Append(chars[random.Next(chars.Length)]);
+            }
+            return sb.ToString();
         }
     }
 }

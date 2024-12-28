@@ -12,10 +12,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Connection : INotifyPropertyChanged
     {
+        private readonly byte[] SEND_LEDGER_SIGNAL = new byte[] { 128, 128, 255, 255, 128 };
+        private readonly byte[] RECV_LEDGER_SIGNAL = new byte[] { 255, 128, 255, 128, 255 };
         public static string LocalNodeId = "0";
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
         public static bool NewDataRecieved = false;
+        private ObservableCollection<Block> Ledger;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
         public Node _localNode { get; private set; } = new Node(LocalNodeId);
@@ -28,30 +31,33 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         TcpClient remoteClient;
         NetworkStream remoteClientStream;
         TcpListener server;
-        public Connection(Node localNode, Node remoteNode)
+        public Connection(Node localNode, Node remoteNode, ObservableCollection<Block> ledger)
         {
             this._localNode = localNode;
             this._remoteNode = remoteNode;
             client = new TcpClient(remoteNode.IPEndPoint);
             server = new TcpListener(localNode.IPEndPoint);
+            Ledger = ledger;
             RunConnection(false);
         }
-        public Connection(Node remoteNode)
+        public Connection(Node remoteNode, ObservableCollection<Block> ledger)
         {
             this._remoteNode = remoteNode;
             FindAvailableLocalPort();
             this._localNode = new Node(LocalNodeId, "127.0.0.1", defaultLocalPort++);
             client = new TcpClient();
             server = new TcpListener(_localNode.IPEndPoint);
+            Ledger = ledger;
             RunConnection(false);
         }
         
-        public Connection(Node localNode, TcpListener _server, TcpClient _rclient)
+        public Connection(Node localNode, TcpListener _server, TcpClient _rclient, ObservableCollection<Block> ledger)
         {
             this._localNode = localNode;
             server = _server;
             remoteClient = _rclient;
             remoteClientStream = remoteClient.GetStream();
+            Ledger = ledger;
             RunConnection(true);
         }
         public byte[] PopRecieved()
@@ -64,76 +70,36 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             return recievedData.Count > 0;
         }
-        private async void SendLedger(ObservableCollection<Block> ledger)
+        private void SendLedger()
         {
+            ObservableCollection<Block> ledger = null;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ledger = Ledger;
+            });
             client.GetStream().Write(BitConverter.GetBytes(ledger.Count), 0, 4);
             client.GetStream().Read(new byte[1], 0, 1);
             foreach (Block block in ledger)
             {
-                await InstantSend(block.ToByteArray());
+                InstantSendSync(block.ToByteArray());
             }
         }
-        private ObservableCollection<Block>? RecieveLedger() 
-        {
-            ObservableCollection<Block>? ledger = null;
-            byte[] buffer = new byte[4];
-            remoteClientStream.Read(buffer, 0, 4);
-            int count = BitConverter.ToInt32(buffer, 0);
+        private void RecieveLedger() { 
+            ObservableCollection<Block> ledger = new ObservableCollection<Block>;
+            int ledgerSize = BitConverter.ToInt32(InstantRecieveSync(), 0);
             byte[] confirmation = new byte[1];
             confirmation[0] = 1;
-            remoteClientStream.Write(confirmation, 0, 1);
-            for(int i = 0; i < count; i++)
+            remoteClientStream.Write(confirmation, 0, confirmation.Length);
+            for (int i = 0; i < ledgerSize; i++)
             {
-                byte[] data = new byte[MaxBufferSize];
-                int bytesRead = remoteClientStream.Read(data, 0, data.Length);
-                Array.Resize(ref data, bytesRead);
-                ledger.Add(new Block(data));
-                remoteClientStream.Write(confirmation, 0, 1);
+                byte[] data = InstantRecieveSync();
+                Block block = new Block(data);
+                ledger.Add(block);
             }
-            return ledger;
-        }
-        private void SendHashesUntilSignal(ObservableCollection<Block> ledger)
-        {
-            byte[] buffer = new byte[1];
-            int i = ledger.Count - 1;
-            while (buffer[0] == 2)
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                string hash = ledger[i].Hash;
-                byte[] hashes = Encoding.UTF8.GetBytes(hash);
-                client.GetStream().Write(hashes, 0, hashes.Length);
-                client.GetStream().Read(buffer, 0, 1);
-                i--;
-                if(i < 0)
-                    break;
-            }
-        }
-        private void RecieveHashRange(ObservableCollection<byte[]> data, int range) {
-            for (int i = 0; i < range; i++)
-            {
-                byte[] buffer = new byte[MaxBufferSize];
-                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
-                Array.Resize(ref buffer, bytesRead);
-                data.Add(buffer);
-                if(i != range - 1)
-                {
-                    byte[] confirmation = new byte[1];
-                    confirmation[0] = 1;
-                    remoteClientStream.Write(confirmation, 0, 1);
-                }
-            }
-        }
-        private void EndFindingHashes()
-        {
-            byte[] buffer = new byte[1];
-            buffer[0] = 2;
-            client.GetStream().Write(buffer, 0, 1);
-        }
-        private void FindLastCorrectHash(ObservableCollection<Block> ledger)
-        {
-            byte[] buffer = new byte[MaxBufferSize];
-            byte[] confirm = new byte[1];
-            confirm[0] = 1;
-            
+                Ledger = ledger;
+            });
         }
         private async Task Reciever()
         {
@@ -144,9 +110,22 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 confirmation[0] = 1;
                 int bytesRead = remoteClientStream.Read(data, 0, data.Length);
                 Array.Resize(ref data, bytesRead);
-                recievedData.Add(data);
-                remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
-                NewDataRecieved = true;
+                if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
+                {
+                    SendLedger();
+                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                }
+                else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
+                {
+                    RecieveLedger();
+                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                }
+                else
+                {
+                    recievedData.Add(data);
+                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                    NewDataRecieved = true;
+                }
             }
         }
         public void Send(byte[] data)
@@ -163,6 +142,26 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 client.GetStream().Write(data, 0, data.Length);
                 client.GetStream().Read(confirmation, 0, confirmation.Length);
             }
+        }
+        private void InstantSendSync(byte[] data)
+        {
+            byte[] confirmation = new byte[1];
+            confirmation[0] = 0;
+            while (confirmation[0] == 0)
+            {
+                client.GetStream().Write(data, 0, data.Length);
+                client.GetStream().Read(confirmation, 0, confirmation.Length);
+            }
+        }
+        private byte[] InstantRecieveSync()
+        {
+            byte[] data = new byte[MaxBufferSize];
+            byte[] confirmation = new byte[1];
+            confirmation[0] = 1;
+            int bytesRecieved = remoteClientStream.Read(data, 0, data.Length);
+            Array.Resize(ref data, bytesRecieved);
+            remoteClientStream.Write(confirmation, 0, confirmation.Length);
+            return data;
         }
         private async void RunConnection(bool connectionEstablished)
         {

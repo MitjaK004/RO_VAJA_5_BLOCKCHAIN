@@ -23,7 +23,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private string _localNodeId = Node.GenerateUUID();
         private readonly int SecondsBetweenNewBlocks = 10;
         private readonly int BlocksBetweenDifficultyChange = 10;
-        public int _difficulty { get; private set; } = 1;
+        public int _difficulty { get; private set; } = 5;
         public int Difficulty
         {
             get { return _difficulty; }
@@ -61,12 +61,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            {
                return false;
            }
-           Connection connection = new Connection(node);
+           Connection connection = new Connection(node, Ledger);
            Connections.Add(connection);
            return true;
         }
         public void StartStdServer() {
-           Task.Run(() => _stdServer.StartStandardServer(_connections));
+           Task.Run(() => _stdServer.StartStandardServer(_connections, Ledger));
         }
         public bool SendBlock(Block block)
         {

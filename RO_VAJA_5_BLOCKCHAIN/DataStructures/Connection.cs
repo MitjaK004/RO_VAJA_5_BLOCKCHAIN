@@ -95,32 +95,45 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private void SendHashesUntilSignal(ObservableCollection<Block> ledger)
         {
             byte[] buffer = new byte[1];
+            int i = ledger.Count - 1;
             while (buffer[0] == 2)
             {
-                string hash = ledger.Last().Hash;
+                string hash = ledger[i].Hash;
                 byte[] hashes = Encoding.UTF8.GetBytes(hash);
                 client.GetStream().Write(hashes, 0, hashes.Length);
                 client.GetStream().Read(buffer, 0, 1);
+                i--;
+                if(i < 0)
+                    break;
             }
+        }
+        private void RecieveHashRange(ObservableCollection<byte[]> data, int range) {
+            for (int i = 0; i < range; i++)
+            {
+                byte[] buffer = new byte[MaxBufferSize];
+                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
+                Array.Resize(ref buffer, bytesRead);
+                data.Add(buffer);
+                if(i != range - 1)
+                {
+                    byte[] confirmation = new byte[1];
+                    confirmation[0] = 1;
+                    remoteClientStream.Write(confirmation, 0, 1);
+                }
+            }
+        }
+        private void EndFindingHashes()
+        {
+            byte[] buffer = new byte[1];
+            buffer[0] = 2;
+            client.GetStream().Write(buffer, 0, 1);
         }
         private void FindLastCorrectHash(ObservableCollection<Block> ledger)
         {
             byte[] buffer = new byte[MaxBufferSize];
             byte[] confirm = new byte[1];
             confirm[0] = 1;
-            string Hash = null;
-            int i = ledger.Count - 1;
-            do
-            {
-                int bytesRead = remoteClientStream.Read(buffer, 0, MaxBufferSize);
-                Array.Resize(ref buffer, bytesRead);
-                Hash = Encoding.UTF8.GetString(buffer);
-                if (ledger[i].Hash == Hash)
-                    break;
-                i--;
-            } while (ledger[i].Hash != Hash);
-            confirm[0] = 2;
-            client.GetStream().Write(confirm, 0, 1);
+            
         }
         private async Task Reciever()
         {

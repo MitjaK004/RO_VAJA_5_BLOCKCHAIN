@@ -19,7 +19,9 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public static int MaxBufferSize = 4096;
         public static int defaultLocalPort = 25351;
         public static bool NewDataRecieved = false;
-        private ObservableCollection<Block> Ledger;
+        //private ObservableCollection<Block> Ledger;
+        private Action<ObservableCollection<Block>> LedgerSetter;
+        private Func<ObservableCollection<Block>> LedgerGetter;
         private List<byte[]> recievedData = new List<byte[]>();
         public bool Error { get; private set; } = false;
         public Node _localNode { get; private set; } = new Node(LocalNodeId);

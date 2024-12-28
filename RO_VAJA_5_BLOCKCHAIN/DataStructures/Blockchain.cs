@@ -91,6 +91,14 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             get { return _localNodeId; }
         }
+        public void SetLedger(ObservableCollection<Block> ledger)
+        {
+            Ledger = ledger;
+        }
+        public ObservableCollection<Block> GetLedger()
+        {
+            return Ledger;
+        }
         private async Task UpdateLedger()
         {
             while (RunLedgerUpdate)

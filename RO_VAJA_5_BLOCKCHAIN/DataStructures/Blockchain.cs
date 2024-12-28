@@ -23,6 +23,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private string _localNodeId = Node.GenerateUUID();
         private readonly int SecondsBetweenNewBlocks = 10;
         private readonly int BlocksBetweenDifficultyChange = 10;
+        private readonly int LEDGER_TOO_SHORT = 778;
+        private readonly int LEDGER_TOO_LONG = 887;
         public int _difficulty { get; private set; } = 5;
         public int Difficulty
         {
@@ -101,7 +103,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                         while (connection.RecievedData())
                         {
                             Block block = new Block(connection.PopRecieved());
-                            if (ValidateBlock(block))
+                            int flags = 0;
+                            if (ValidateBlock(block, out flags))
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
@@ -110,26 +113,40 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                             }
                             else
                             {
-                                Application.Current.Dispatcher.Invoke(() =>
+                                if (flags == LEDGER_TOO_SHORT)
                                 {
-                                    //MessageBox.Show("Invalid block recieved");
-                                });
-                            }
+                                    //Če je naš ledger prekratek, dobimo daljšega
+                                    connection.ReceveLongerLedger();
+                                }
+                                else if (flags == LEDGER_TOO_LONG)
+                                {
+                                    //Če je naš ledger predolg, pošljemo daljšega
+                                    connection.SendLongerLedger();
+                                }
                         }
                         Connection.NewDataRecieved = false;
                     }
                 }
             }
         }
-        private bool ValidateBlock(Block block)
+        private bool ValidateBlock(Block block, out int flags)
         {
+            flags = 0;
             if (block.Index == 0)
             {
                 return true;
             }
-            Block previousBlock = _ledger[block.Index - 1];
+            Block previousBlock = _ledger[_ledger.Count - 1];
             if(block.Index != previousBlock.Index + 1)
             {
+                if(block.Index < previousBlock.Index)
+                {
+                    flags = LEDGER_TOO_LONG;
+                }
+                else if(block.Index > previousBlock.Index + 1)
+                {
+                    flags = LEDGER_TOO_SHORT;
+                }
                 return false;
             }
             if (block.PreviousHash != previousBlock.Hash)

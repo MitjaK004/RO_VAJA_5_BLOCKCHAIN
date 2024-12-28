@@ -161,6 +161,18 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 client.GetStream().Read(confirmation, 0, confirmation.Length);
             }
         }
+        private void InstantSendSync_NoConfirm(byte[] data)
+        {
+            client.GetStream().Write(data, 0, data.Length);
+        }
+        public void ReceveLongerLedger()
+        {
+            InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL);
+        }
+        public void SendLongerLedger()
+        {
+            InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
+        }
         private byte[] InstantRecieveSync()
         {
             byte[] data = new byte[MaxBufferSize];

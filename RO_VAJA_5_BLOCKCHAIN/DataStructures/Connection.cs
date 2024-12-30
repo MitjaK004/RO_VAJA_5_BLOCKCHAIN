@@ -135,8 +135,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
                     InstantRecieveSync_NoConfirm();
                     SendLedger();
-                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
-                    //Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
                 }
                 else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
                 {
@@ -144,16 +143,14 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
                     InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL_RECV_READY);
                     RecieveLedger();
-                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
-                    //Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
                 }
                 else if(data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
                 {
                     MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
                     Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
                     SendLedger();
-                    remoteClientStream.Write(confirmation, 0, confirmation.Length);
-                    //Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
                 }
                 else
                 {

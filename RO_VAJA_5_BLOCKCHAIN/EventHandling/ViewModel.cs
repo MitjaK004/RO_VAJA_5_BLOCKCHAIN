@@ -16,11 +16,6 @@ namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
         public ObservableCollection<Block> Ledger
         {
             get { return blockchain.Ledger; }
-            set
-            {
-                blockchain.Ledger = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
-            }
         }
         public Blockchain blockchain
         {

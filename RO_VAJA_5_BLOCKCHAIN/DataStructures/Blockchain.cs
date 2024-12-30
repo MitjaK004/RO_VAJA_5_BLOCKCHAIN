@@ -104,11 +104,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 //Ledger = ledger;
                 Ledger.Clear();
-                Ledger = ledger;
-                /*foreach (Block block in ledger)
+                foreach (Block block in ledger)
                 {
                     Ledger.Add(block);
-                }*/
+                }
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
             });
         }

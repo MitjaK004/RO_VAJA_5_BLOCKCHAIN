@@ -29,6 +29,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            
             <ListView Grid.Column="0" Name="LedgerListView" Background="#2C2F33" FontSize="18" Foreground="LightGray" BorderBrush="#2c2f33" 
             ItemsSource="{Binding Ledger}">
                 <ListView.ItemTemplate>

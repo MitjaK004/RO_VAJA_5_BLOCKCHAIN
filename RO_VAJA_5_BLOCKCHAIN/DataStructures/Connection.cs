@@ -147,7 +147,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 }
                 else if(data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
                 {
-                    MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
+                    //MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
                     Application.Current.Dispatcher.Invoke(() => { Pause(); });
                     SendLedger();
                     Application.Current.Dispatcher.Invoke(() => { Resume(); });

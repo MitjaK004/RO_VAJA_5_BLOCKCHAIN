@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using RO_VAJA_5_BLOCKCHAIN.DataStructures;
 
 namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
@@ -27,6 +28,18 @@ namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
             }
         }
         public ViewModel() {
+            Ledger.CollectionChanged += Ledger_CollectionChanged;
+        }
+
+        private void Ledger_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    mainWindow.ScrollToBottom();
+                }
+            });
         }
     }
 }

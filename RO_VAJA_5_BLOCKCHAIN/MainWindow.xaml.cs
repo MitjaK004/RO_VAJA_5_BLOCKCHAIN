@@ -25,7 +25,6 @@ namespace RO_VAJA_5_BLOCKCHAIN
             DataContext = VM;
         }
 
-
         private void AddNodeBtn_Click(object sender, RoutedEventArgs e)
         {
             AddNodeWindow ANW = new AddNodeWindow(10548);
@@ -60,6 +59,22 @@ namespace RO_VAJA_5_BLOCKCHAIN
         private void ResumeBtn_Click(object sender, RoutedEventArgs e)
         {
             VM.blockchain.ResumeMining();
+        }
+
+        public void ScrollToBottom()
+        {
+            if (LedgerListView.Items.Count > 0)
+            {
+                var border = VisualTreeHelper.GetChild(LedgerListView, 0) as Decorator;
+                if (border != null)
+                {
+                    var scrollViewer = border.Child as ScrollViewer;
+                    if (scrollViewer != null)
+                    {
+                        scrollViewer.ScrollToEnd();
+                    }
+                }
+            }
         }
     }
 }

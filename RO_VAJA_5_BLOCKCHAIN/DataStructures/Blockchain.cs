@@ -8,6 +8,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Animation;
 
 namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
@@ -25,6 +26,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private readonly int BlocksBetweenDifficultyChange = 10;
         private readonly int LEDGER_TOO_SHORT = 778;
         private readonly int LEDGER_TOO_LONG = 887;
+        public bool Pause = false;
         public int _difficulty { get; private set; } = 5;
         public int Difficulty
         {
@@ -37,6 +39,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
+            Connection.PauseMining = PauseMining;
+            Connection.ResumeMining = ResumeMining;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -44,6 +48,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Blockchain(int StdServerPort) {
             _stdServer._port = StdServerPort;
             Connection.LocalNodeId = _localNodeId;
+            Connection.PauseMining = PauseMining;
+            Connection.ResumeMining = ResumeMining;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -99,17 +105,28 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             return Ledger;
         }
+        public void PauseMining()
+        {
+            Pause = true;
+        }
+        public void ResumeMining()
+        {
+            Pause = false;
+        }
         private async Task UpdateLedger()
         {
             while (RunLedgerUpdate)
             {
                 await Task.Delay(5);
+                while (Pause) { await Task.Delay(250); }
                 if (Connection.NewDataRecieved)
                 {
                     foreach (Connection connection in _connections)
                     {
+                        while (Pause) { await Task.Delay(250); }
                         while (connection.RecievedData())
                         {
+                            while (Pause) { await Task.Delay(250); }
                             Block block = new Block(connection.PopRecieved());
                             int flags = 0;
                             if (ValidateBlock(block, out flags))
@@ -125,13 +142,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                 {
                                     //Če je naš ledger prekratek, dobimo daljšega
                                     connection.ReceveLongerLedger();
+                                    PauseMining();
                                 }
                                 else if (flags == LEDGER_TOO_LONG)
                                 {
                                     //Če je naš ledger predolg, pošljemo daljšega
                                     connection.SendLongerLedger();
+                                    PauseMining();
                                 }
                             }
+                            while (Pause) { await Task.Delay(250); }
                         }
                         Connection.NewDataRecieved = false;
                     }
@@ -179,15 +199,14 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private void MineBlock(Block block)
         {
-            block.GenerateHash();
+            block.GenerateHash(ref Pause);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                _ledger.Add(block);
+                Ledger.Add(block);
                 foreach (Connection connection in _connections)
                 {
                     connection.Send(block.ToByteArray());
                 }
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
             });
         }
         private async Task GenerateNewBlocks()
@@ -196,6 +215,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             while (GenerateBlocksRunning)
             {
                 await Task.Delay(100);
+                while (Pause) { await Task.Delay(250); }
                 Block block;
                 if (numBlocksBeforeDifficultyChange <= 0)
                 {

@@ -51,5 +51,15 @@ namespace RO_VAJA_5_BLOCKCHAIN
             }
             return sb.ToString();
         }
+
+        private void PauseBtn_Click(object sender, RoutedEventArgs e)
+        {
+            VM.blockchain.PauseMining();
+        }
+
+        private void ResumeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            VM.blockchain.ResumeMining();
+        }
     }
 }

@@ -19,6 +19,10 @@
             <MenuItem Header="Block">
                 <MenuItem x:Name="AddNewRandomBlock" Header="Add New Random Block" Click="AddNewRandomBlock_Click"></MenuItem>
             </MenuItem>
+            <MenuItem Header="Mining">
+                <MenuItem x:Name="PauseBtn" Header="Pause" Click="PauseBtn_Click"></MenuItem>
+                <MenuItem x:Name="ResumeBtn" Header="Resume" Click="ResumeBtn_Click"></MenuItem>
+            </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

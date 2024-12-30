@@ -100,6 +100,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public void SetLedger(ObservableCollection<Block> ledger)
         {
             Ledger = ledger;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
         }
         public ObservableCollection<Block> GetLedger()
         {

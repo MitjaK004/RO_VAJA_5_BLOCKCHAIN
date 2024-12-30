@@ -151,6 +151,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
+                                    Difficulty = block.Difficulty;
                                     Ledger.Add(block);
                                 });
                             }

@@ -124,7 +124,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             return GetHashString(this.ToString());
         }
-        public bool GenerateHash(ref bool Pause)
+        public bool GenerateHash(ref bool Pause, ref bool PauseMining)
         {
             if(Hash != "NULL")
                 return false;
@@ -135,7 +135,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             Hash = GetHashString(this.ToString());
             while (!Hash.StartsWith(target))
             {
-                while (Pause) { Task.Delay(250); }
+                while (Pause || PauseMining) { Task.Delay(250); }
                 Nonce++;
                 Hash = GetHashString(this.ToString());
             }

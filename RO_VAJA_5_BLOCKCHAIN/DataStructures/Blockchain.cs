@@ -26,7 +26,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private readonly int BlocksBetweenDifficultyChange = 10;
         private readonly int LEDGER_TOO_SHORT = 778;
         private readonly int LEDGER_TOO_LONG = 887;
-        public bool Pause = false;
+        public bool _Pause = false;
+        public bool _PauseMining = false;
         public int _difficulty { get; private set; } = 5;
         public int Difficulty
         {
@@ -39,8 +40,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
-            Connection.PauseMining = PauseMining;
-            Connection.ResumeMining = ResumeMining;
+            Connection.PauseMining = Pause;
+            Connection.ResumeMining = Resume;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -48,8 +49,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Blockchain(int StdServerPort) {
             _stdServer._port = StdServerPort;
             Connection.LocalNodeId = _localNodeId;
-            Connection.PauseMining = PauseMining;
-            Connection.ResumeMining = ResumeMining;
+            Connection.PauseMining = Pause;
+            Connection.ResumeMining = Resume;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -99,35 +100,51 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public void SetLedger(ObservableCollection<Block> ledger)
         {
-            Ledger = ledger;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                //Ledger = ledger;
+                Ledger.Clear();
+                foreach (Block block in ledger)
+                {
+                    Ledger.Add(block);
+                }
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+            });
         }
         public ObservableCollection<Block> GetLedger()
         {
             return Ledger;
         }
+        public void Pause()
+        {
+            _Pause = true;
+        }
+        public void Resume()
+        {
+            _Pause = false;
+        }
         public void PauseMining()
         {
-            Pause = true;
+            _PauseMining = true;
         }
         public void ResumeMining()
         {
-            Pause = false;
+            _PauseMining = false;
         }
         private async Task UpdateLedger()
         {
             while (RunLedgerUpdate)
             {
                 await Task.Delay(5);
-                while (Pause) { await Task.Delay(250); }
+                while (_Pause) { await Task.Delay(250); }
                 if (Connection.NewDataRecieved)
                 {
                     foreach (Connection connection in _connections)
                     {
-                        while (Pause) { await Task.Delay(250); }
+                        while (_Pause) { await Task.Delay(250); }
                         while (connection.RecievedData())
                         {
-                            while (Pause) { await Task.Delay(250); }
+                            while (_Pause) { await Task.Delay(250); }
                             Block block = new Block(connection.PopRecieved());
                             int flags = 0;
                             if (ValidateBlock(block, out flags))
@@ -143,16 +160,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                 {
                                     //Če je naš ledger prekratek, dobimo daljšega
                                     connection.ReceveLongerLedger();
-                                    PauseMining();
+                                    Pause();
                                 }
                                 else if (flags == LEDGER_TOO_LONG)
                                 {
                                     //Če je naš ledger predolg, pošljemo daljšega
                                     connection.SendLongerLedger();
-                                    PauseMining();
+                                    Pause();
                                 }
                             }
-                            while (Pause) { await Task.Delay(250); }
+                            while (_Pause) { await Task.Delay(250); }
                         }
                         Connection.NewDataRecieved = false;
                     }
@@ -200,7 +217,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private void MineBlock(Block block)
         {
-            block.GenerateHash(ref Pause);
+            block.GenerateHash(ref _Pause, ref _PauseMining);
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Ledger.Add(block);
@@ -216,7 +233,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             while (GenerateBlocksRunning)
             {
                 await Task.Delay(100);
-                while (Pause) { await Task.Delay(250); }
+                while (_Pause || _PauseMining) { await Task.Delay(250); }
                 Block block;
                 if (numBlocksBeforeDifficultyChange <= 0)
                 {

@@ -95,7 +95,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             foreach (Block block in ledger)
             {
                 InstantSendSync(block.ToByteArray());
-                MessageBox.Show(block.ToString());
+                //MessageBox.Show(block.ToString());
                 a++;
             }
             Application.Current.Dispatcher.Invoke(() =>
@@ -110,7 +110,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 byte[] data = InstantRecieveSync();
                 Block block = new Block(data);
-                MessageBox.Show(block.ToString());
+                //MessageBox.Show(block.ToString());
                 ledger.Add(block);
             }
             Application.Current.Dispatcher.Invoke(() =>
@@ -130,7 +130,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 Array.Resize(ref data, bytesRead);
                 if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
                 {
-                    MessageBox.Show("SEND_LEDGER_SIGNAL");
+                    //MessageBox.Show("SEND_LEDGER_SIGNAL");
                     Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
                     InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
                     InstantRecieveSync_NoConfirm();
@@ -139,7 +139,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 }
                 else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
                 {
-                    MessageBox.Show("RECV_LEDGER_SIGNAL");
+                    //MessageBox.Show("RECV_LEDGER_SIGNAL");
                     Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
                     InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL_RECV_READY);
                     RecieveLedger();

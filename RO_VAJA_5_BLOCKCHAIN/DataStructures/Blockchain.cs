@@ -40,8 +40,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Blockchain() {
             Connection.LocalNodeId = _localNodeId;
-            Connection.PauseMining = Pause;
-            Connection.ResumeMining = Resume;
+            Connection.Pause = Pause;
+            Connection.Resume = Resume;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -49,8 +49,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Blockchain(int StdServerPort) {
             _stdServer._port = StdServerPort;
             Connection.LocalNodeId = _localNodeId;
-            Connection.PauseMining = Pause;
-            Connection.ResumeMining = Resume;
+            Connection.Pause = Pause;
+            Connection.Resume = Resume;
             StartStdServer();
             Task.Run(() => UpdateLedger());
             Task.Run(() => GenerateNewBlocks());
@@ -104,10 +104,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 //Ledger = ledger;
                 Ledger.Clear();
-                foreach (Block block in ledger)
+                Ledger = ledger;
+                /*foreach (Block block in ledger)
                 {
                     Ledger.Add(block);
-                }
+                }*/
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
             });
         }

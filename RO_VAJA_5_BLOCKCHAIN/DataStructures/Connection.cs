@@ -12,9 +12,9 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
 {
     public class Connection : INotifyPropertyChanged
     {
-        private readonly byte[] SEND_LEDGER_SIGNAL = new byte[] { 128, 128, 255, 255, 128 };
+        private readonly byte[] SEND_LEDGER_SIGNAL = new byte[] { 120, 128, 250, 255, 120 };
         private readonly byte[] SEND_LEDGER_SIGNAL_RECV_READY = new byte[] { 255, 128, 255, 128, 255 };
-        private readonly byte[] RECV_LEDGER_SIGNAL = new byte[] { 255, 128, 255, 128, 255 };
+        private readonly byte[] RECV_LEDGER_SIGNAL = new byte[] { 250, 120, 250, 120, 250 };
         private readonly byte[] RECV_READY = new byte[] { 123, 45, 67, 89, 10 };
         private readonly byte[] DATA_OK = new byte[] { 45, 45, 10, 89, 123 };
         private readonly byte[] DATA_ERR = new byte[] { 10, 10, 10, 10, 10 };
@@ -24,8 +24,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public static int defaultLocalPort = 25351;
         public static bool NewDataRecieved = false;
         //private ObservableCollection<Block> Ledger;
-        public static Action PauseMining = () => { };
-        public static Action ResumeMining = () => { };
+        public static Action Pause = () => { };
+        public static Action Resume = () => { };
         private Action<ObservableCollection<Block>> LedgerSetter;
         private Func<ObservableCollection<Block>> LedgerGetter;
         private List<byte[]> recievedData = new List<byte[]>();
@@ -131,26 +131,26 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
                 {
                     //MessageBox.Show("SEND_LEDGER_SIGNAL");
-                    Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
                     InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
                     InstantRecieveSync_NoConfirm();
                     SendLedger();
-                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
                 }
                 else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
                 {
                     //MessageBox.Show("RECV_LEDGER_SIGNAL");
-                    Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
                     InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL_RECV_READY);
                     RecieveLedger();
-                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
                 }
                 else if(data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
                 {
                     MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
-                    Application.Current.Dispatcher.Invoke(() => { PauseMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
                     SendLedger();
-                    Application.Current.Dispatcher.Invoke(() => { ResumeMining(); });
+                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
                 }
                 else
                 {

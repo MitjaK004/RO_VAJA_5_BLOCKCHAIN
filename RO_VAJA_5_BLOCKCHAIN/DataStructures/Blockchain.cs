@@ -108,6 +108,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 {
                     Ledger.Add(block);
                 }
+                Difficulty = ledger.Last().Difficulty;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
             });
         }

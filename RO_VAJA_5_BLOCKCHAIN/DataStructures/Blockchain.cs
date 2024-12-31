@@ -32,7 +32,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public int Difficulty
         {
             get { return _difficulty; }
-            private set
+            set
             {
                 _difficulty = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Difficulty"));

@@ -22,6 +22,7 @@
             <MenuItem Header="Mining">
                 <MenuItem x:Name="PauseBtn" Header="Pause" Click="PauseBtn_Click"></MenuItem>
                 <MenuItem x:Name="ResumeBtn" Header="Resume" Click="ResumeBtn_Click"></MenuItem>
+                <MenuItem x:Name="CostumDiff" Header="Costum Difficulty" Click="CostumDiff_Click"></MenuItem>
             </MenuItem>
         </Menu>
         <Grid Grid.Row="1">
@@ -67,10 +68,10 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"></ColumnDefinition>
                 <ColumnDefinition Width="85"></ColumnDefinition>
-                <ColumnDefinition Width="15"></ColumnDefinition>
+                <ColumnDefinition Width="5"></ColumnDefinition>
                 <ColumnDefinition Width="135"></ColumnDefinition>
-                <ColumnDefinition Width="20"></ColumnDefinition>
-                <ColumnDefinition Width="15"></ColumnDefinition>
+                <ColumnDefinition Width="35"></ColumnDefinition>
+                <ColumnDefinition Width="5"></ColumnDefinition>
                 <ColumnDefinition Width="115"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>

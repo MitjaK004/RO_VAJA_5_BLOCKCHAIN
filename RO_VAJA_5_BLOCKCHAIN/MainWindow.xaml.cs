@@ -76,5 +76,20 @@ namespace RO_VAJA_5_BLOCKCHAIN
                 }
             }
         }
+
+        private void CostumDiff_Click(object sender, RoutedEventArgs e)
+        {
+            CostumDifficultyWindow CDW = new CostumDifficultyWindow();
+            if (CDW.ShowDialog() == true) {
+                if (CDW.Difficulty != String.Empty)
+                {
+                    int diff = int.Parse(CDW.Difficulty);
+                    if (diff > 0 && diff < 100)
+                    {
+                        VM.blockchain.Difficulty = diff;
+                    }
+                }
+            }
+        }
     }
 }

@@ -210,11 +210,11 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             Array.Resize(ref data, bytesRecieved);
             return data;
         }
-        public void ReceveLongerLedger()
+        public void ReceveRemoteLedger()
         {
             InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL);
         }
-        public void SendLongerLedger()
+        public void SendLocalLedger()
         {
             InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
         }

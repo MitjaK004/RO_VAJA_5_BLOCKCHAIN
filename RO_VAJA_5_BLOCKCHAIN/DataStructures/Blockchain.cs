@@ -151,7 +151,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                         {
                             while (_Pause) { await Task.Delay(250); }
                             Block block = new Block(connection.PopRecieved());
-                            int flags = 0;
+                            uint flags = 0;
                             if (ValidateBlock(block, out flags))
                             {
                                 Application.Current.Dispatcher.Invoke(() =>
@@ -162,24 +162,30 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                             }
                             else
                             {
-                                if (flags == LEDGER_TOO_SHORT)
-                                {
-                                    //Če je naš ledger prekratek, dobimo daljšega
-                                    connection.ReceveLongerLedger();
+                                if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_BAD)) {
+                                    connection.ReceveRemoteLedger();
                                     Pause();
                                 }
-                                else if (flags == LEDGER_TOO_LONG)
-                                {
-                                    //Če je naš ledger predolg, pošljemo daljšega
-                                    connection.SendLongerLedger();
+                                else if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_GOOD)) {
+                                    connection.SendLocalLedger();
                                     Pause();
                                 }
-                                else if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_BAD)) { }
-                                else if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_GOOD)) { }
-                                else if(flags == LEDGER_TOO_SHORT) { }
-                                else if(flags == LEDGER_TOO_SHORT) { }
-                                else if(flags == LEDGER_TOO_SHORT) { }
-                                else if(flags == LEDGER_TOO_SHORT) { }
+                                else if(flags == (LEDGER_TOO_LONG | LOCAL_LEDGER_BAD)) {
+                                    connection.ReceveRemoteLedger();
+                                    Pause();
+                                }
+                                else if(flags == (LEDGER_TOO_LONG | LOCAL_LEDGER_GOOD)) {
+                                    connection.SendLocalLedger();
+                                    Pause();
+                                }
+                                else if(flags == (COMULATIVE_DIFFICULTY_MISMATCH | LOCAL_LEDGER_BAD)) {
+                                    connection.ReceveRemoteLedger();
+                                    Pause();
+                                }
+                                else if(flags == (COMULATIVE_DIFFICULTY_MISMATCH | LOCAL_LEDGER_GOOD)) {
+                                    connection.SendLocalLedger();
+                                    Pause();
+                                }
                             }
                             while (_Pause) { await Task.Delay(250); }
                         }
@@ -188,7 +194,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 }
             }
         }
-        private bool ValidateBlock(Block block, out int flags)
+        private bool ValidateBlock(Block block, out uint flags)
         {
             flags = 0;
             if (block.Index == 0)

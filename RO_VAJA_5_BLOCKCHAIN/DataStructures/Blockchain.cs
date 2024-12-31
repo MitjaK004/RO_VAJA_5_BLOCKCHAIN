@@ -26,6 +26,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private readonly int BlocksBetweenDifficultyChange = 10;
         private readonly int LEDGER_TOO_SHORT = 778;
         private readonly int LEDGER_TOO_LONG = 887;
+        private readonly int TIMESTAMP_MISMATCH = 957;
         public bool _Pause = false;
         public bool _PauseMining = false;
         public int _difficulty { get; private set; } = 5;
@@ -204,6 +205,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             }
             if (block.Hash != block.GetHash())
             {
+                return false;
+            }
+            if((block.TimeStamp - previousBlock.TimeStamp).Seconds > 60)
+            {
+                flags = TIMESTAMP_MISMATCH;
+                return false;
+            }
+            if ((previousBlock.TimeStamp - block.TimeStamp).Seconds > 60)
+            {
+                flags = TIMESTAMP_MISMATCH;
                 return false;
             }
             return true;

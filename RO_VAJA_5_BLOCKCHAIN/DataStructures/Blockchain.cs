@@ -24,9 +24,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private string _localNodeId = Node.GenerateUUID();
         private readonly int SecondsBetweenNewBlocks = 10;
         private readonly int BlocksBetweenDifficultyChange = 10;
-        private readonly int LEDGER_TOO_SHORT = 778;
-        private readonly int LEDGER_TOO_LONG = 887;
-        private readonly int TIMESTAMP_MISMATCH = 957;
+        private readonly uint LEDGER_TOO_SHORT = 8;
+        private readonly uint LEDGER_TOO_LONG = 4;
+        private readonly uint COMULATIVE_DIFFICULTY_MISMATCH = 12;
+        private readonly uint LOCAL_LEDGER_BAD = 48;
+        private readonly uint LOCAL_LEDGER_GOOD = 3;
+        private readonly uint TIMESTAMP_MISMATCH = 64;
         public bool _Pause = false;
         public bool _PauseMining = false;
         public int _difficulty { get; private set; } = 5;
@@ -171,6 +174,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                     connection.SendLongerLedger();
                                     Pause();
                                 }
+                                else if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_BAD)) { }
+                                else if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_GOOD)) { }
+                                else if(flags == LEDGER_TOO_SHORT) { }
+                                else if(flags == LEDGER_TOO_SHORT) { }
+                                else if(flags == LEDGER_TOO_SHORT) { }
+                                else if(flags == LEDGER_TOO_SHORT) { }
                             }
                             while (_Pause) { await Task.Delay(250); }
                         }
@@ -187,15 +196,32 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 return true;
             }
             Block previousBlock = _ledger[_ledger.Count - 1];
-            if(block.Index != previousBlock.Index + 1)
+            long localComDiff = (previousBlock.ComulativeDifficulty + (long)Math.Pow(2, block.Difficulty));
+            if (block.Index != previousBlock.Index + 1)
             {
                 if(block.Index < previousBlock.Index)
                 {
                     flags = LEDGER_TOO_LONG;
+                    if (localComDiff > block.ComulativeDifficulty)
+                    {
+                        flags = flags | LOCAL_LEDGER_GOOD;
+                    }
+                    else
+                    {
+                        flags = flags | LOCAL_LEDGER_BAD;
+                    }
                 }
                 else if(block.Index > previousBlock.Index + 1)
                 {
                     flags = LEDGER_TOO_SHORT;
+                    if (localComDiff > block.ComulativeDifficulty)
+                    {
+                        flags = flags | LOCAL_LEDGER_GOOD;
+                    }
+                    else
+                    {
+                        flags = flags | LOCAL_LEDGER_BAD;
+                    }
                 }
                 return false;
             }
@@ -215,6 +241,19 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             if ((previousBlock.TimeStamp - block.TimeStamp).Seconds > 60)
             {
                 flags = TIMESTAMP_MISMATCH;
+                return false;
+            }
+            if (localComDiff != block.ComulativeDifficulty)
+            {
+                flags = COMULATIVE_DIFFICULTY_MISMATCH;
+                if(localComDiff > block.ComulativeDifficulty)
+                {
+                    flags = flags | LOCAL_LEDGER_GOOD;
+                }
+                else
+                {
+                    flags = flags | LOCAL_LEDGER_BAD;
+                }
                 return false;
             }
             return true;
@@ -275,17 +314,27 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 {
                     block = CostumBlockQueue.First();
                     block.Difficulty = _difficulty;
+                    block.ComulativeDifficulty = GetComulativeDifficulty();
                     MineBlock(block);
                     CostumBlockQueue.Remove(block);
                     numBlocksBeforeDifficultyChange--;
                 }
                 else
                 {
-                    block = new Block(Ledger.Count, _difficulty, RandomString(32), System.DateTime.Now, GetLastBlockHash());
+                    block = new Block(Ledger.Count, _difficulty, GetComulativeDifficulty(), RandomString(32), System.DateTime.Now, GetLastBlockHash());
                     MineBlock(block);
                     numBlocksBeforeDifficultyChange--;
                 }
             }
+        }
+        private long GetComulativeDifficulty()
+        {
+            long difficulty = 0;
+            foreach(Block bl in _ledger)
+            {
+                difficulty += (long)Math.Pow(2, bl.Difficulty);
+            }
+            return difficulty;
         }
         public string GetLastBlockHash()
         {

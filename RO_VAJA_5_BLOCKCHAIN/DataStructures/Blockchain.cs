@@ -239,26 +239,25 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 Block block;
                 if (numBlocksBeforeDifficultyChange <= 0)
                 {
-                    double averageTime = 0.0;
+                    double timeTaken = 0.0, timeExpected = 0.0;
                     ObservableCollection<Block>? blocks = null;
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         while (blocks == null)
                             blocks = new ObservableCollection<Block>(_ledger);
                     });
-                    for (int i = blocks.Count - 9; i < blocks.Count; i++)
-                    {
-                        averageTime += (blocks[i].TimeStamp - blocks[i - 1].TimeStamp).TotalSeconds;
-                    }
-                    averageTime /= 10;
-                    if (averageTime < SecondsBetweenNewBlocks)
+                    Block previousAdjustmentBlock = blocks[blocks.Count - BlocksBetweenDifficultyChange];
+                    timeTaken = (blocks.Last().TimeStamp - previousAdjustmentBlock.TimeStamp).TotalSeconds;
+                    timeExpected = SecondsBetweenNewBlocks * BlocksBetweenDifficultyChange;
+                    if (timeTaken < (SecondsBetweenNewBlocks / 2))
                     {
                         Difficulty++;
                     }
-                    else
+                    else if (timeTaken > (SecondsBetweenNewBlocks * 2))
                     {
                         Difficulty--;
                     }
+                    else { /*NOP*/ }
                     numBlocksBeforeDifficultyChange = BlocksBetweenDifficultyChange;
                 }
                 if (CostumBlockQueue.Count > 0)

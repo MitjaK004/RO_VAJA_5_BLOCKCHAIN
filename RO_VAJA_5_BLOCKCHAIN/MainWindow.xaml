@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RO_VAJA_5_BLOCKCHAIN"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Background="#2c2f33">
+        Title="MainWindow" Height="450" Width="930" Background="#2c2f33">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
@@ -53,9 +53,11 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Label Grid.Row="0" FontSize="14" Content="{Binding RemoteNode.IP}"></Label>
                             <Label Grid.Row="1" FontSize="14" Content="{Binding RemoteNode.Port}"></Label>
+                            <Label Grid.Row="2" FontSize="14" Content="{Binding RemoteNode.Id}"></Label>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -65,15 +67,19 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200"></ColumnDefinition>
                 <ColumnDefinition Width="85"></ColumnDefinition>
-                <ColumnDefinition Width="25"></ColumnDefinition>
+                <ColumnDefinition Width="15"></ColumnDefinition>
                 <ColumnDefinition Width="135"></ColumnDefinition>
-                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition Width="20"></ColumnDefinition>
+                <ColumnDefinition Width="15"></ColumnDefinition>
+                <ColumnDefinition Width="115"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0">Local Standard Server Port:</Label>
             <Label Grid.Column="1" Content="{Binding blockchain.StdServer.Port}"></Label>
             <Label Grid.Column="3">Current Dificulty:</Label>
             <Label Grid.Column="4" Content="{Binding blockchain.Difficulty}"></Label>
+            <Label Grid.Column="6" Content="Local Node Id: "></Label>
+            <Label Grid.Column="7" Content="{Binding blockchain.LocalNodeId}"></Label>
         </Grid>
     </Grid>
 </Window>

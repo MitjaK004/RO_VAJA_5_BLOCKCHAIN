@@ -251,20 +251,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             try
             {
-                byte[] confirmation = new byte[1];
+                byte[] buffer = new byte[4096];
                 client.Connect(_remoteNode.IPEndPoint);
                 clientStream = client.GetStream();
                 byte[] IdIpPort = Encoding.ASCII.GetBytes($"{LocalNodeId};{_localNode.IP.ToString()};{_localNode.Port.ToString()}");
                 clientStream.Write(IdIpPort, 0, IdIpPort.Count());
-                clientStream.Read(confirmation, 0, 1);
-                if (confirmation[0] == 1)
-                {
-                    return;
-                }
-                else
-                {
-                    throw new Exception("Connection failed");
-                }
+                int br = clientStream.Read(buffer, 0, 4096);
+                Array.Resize(ref buffer, br);
+                string res = Encoding.UTF8.GetString(buffer);
+                string[] remIdIpPort = res.Split(';');
+                _remoteNode = new Node(remIdIpPort[0], remIdIpPort[1], int.Parse(remIdIpPort[2]));
             }
             catch(Exception e)
             {
@@ -282,9 +278,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                 string res = Encoding.UTF8.GetString(buffer);
                 string[] idIpPort = res.Split(';');
                 _remoteNode = new Node(idIpPort[0], idIpPort[1], int.Parse(idIpPort[2]));
-                byte[] confirmation = new byte[1];
-                confirmation[0] = 1;
-                remoteClientStream.Write(confirmation, 0, confirmation.Length);
+                byte[] buffer2 = Encoding.ASCII.GetBytes($"{LocalNodeId};{_localNode.IP.ToString()};{_localNode.Port.ToString()}"); ;
+                remoteClientStream.Write(buffer2, 0, buffer2.Length);
                 client = new TcpClient();
                 client.Connect(_remoteNode.IPEndPoint);
                 clientStream = client.GetStream();

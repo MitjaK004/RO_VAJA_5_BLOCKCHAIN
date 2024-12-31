@@ -25,7 +25,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public Node ToNode()
         {
-            return new Node(IP, _port);
+            return new Node("0", IP, _port);
         }
         public StandardConnectionServer() { RunStdServer = true;  }
         public StandardConnectionServer(int port) { this._port = port; RunStdServer = true; }

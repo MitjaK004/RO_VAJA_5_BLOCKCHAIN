@@ -16,6 +16,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
     {
         public ObservableCollection<Connection> _connections { get; private set; } = new ObservableCollection<Connection>();
         public ObservableCollection<Block> _ledger = new ObservableCollection<Block>();
+        public ObservableCollection<DisplayLedgerItem> _displayLedger = new ObservableCollection<DisplayLedgerItem>();
         public ObservableCollection<Block> CostumBlockQueue = new ObservableCollection<Block>();
         public event PropertyChangedEventHandler? PropertyChanged;
         private StandardConnectionServer _stdServer = new StandardConnectionServer(10548);
@@ -40,6 +41,15 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             {
                 _difficulty = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Difficulty"));
+            }
+        }
+        public ObservableCollection<DisplayLedgerItem> DisplayLedger
+        {
+            get { return _displayLedger; }
+            set
+            {
+                _displayLedger = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("DisplayLedger"));
             }
         }
         public Blockchain() {
@@ -95,7 +105,8 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            set
            {
                _ledger = value;
-               PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+                DisplayLedger.Add(new DisplayLedgerItem(_ledger.Last(), true));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
            }
         }
         public string LocalNodeId

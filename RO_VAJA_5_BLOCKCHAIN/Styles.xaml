@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Style TargetType="TextBlock">
+    <!--<Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="LightGray"/>
-    </Style>
+    </Style>-->
 
     <Style TargetType="Menu">
         <Setter Property="Foreground" Value="LightGray"/>

@@ -23,7 +23,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public bool RunLedgerUpdate = true;
         public bool GenerateBlocksRunning = true;
         private string _localNodeId = Node.GenerateUUID();
-        private readonly int SecondsBetweenNewBlocks = 10;
+        private readonly int SecondsBetweenNewBlocks = 18;
         private readonly int BlocksBetweenDifficultyChange = 10;
         private readonly uint LEDGER_TOO_SHORT = 8;
         private readonly uint LEDGER_TOO_LONG = 4;
@@ -105,9 +105,13 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
            set
            {
                _ledger = value;
-                DisplayLedger.Add(new DisplayLedgerItem(_ledger.Last(), true));
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+               PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
            }
+        }
+        private void AddLedgerItem(Block b)
+        {
+            Ledger.Add(b);
+            DisplayLedger.Add(new DisplayLedgerItem(_ledger.Last(), true));
         }
         public string LocalNodeId
         {
@@ -117,14 +121,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                //Ledger = ledger;
+                _Pause = true;
                 Ledger.Clear();
+                DisplayLedger.Clear();
                 foreach (Block block in ledger)
                 {
-                    Ledger.Add(block);
+                    AddLedgerItem(block);
                 }
                 Difficulty = ledger.Last().Difficulty;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Ledger"));
+                _Pause = false;
             });
         }
         public ObservableCollection<Block> GetLedger()
@@ -168,12 +174,16 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                                 Application.Current.Dispatcher.Invoke(() =>
                                 {
                                     Difficulty = block.Difficulty;
-                                    Ledger.Add(block);
+                                    //Ledger.Add(block);
+                                    AddLedgerItem(block);
                                 });
                             }
                             else
                             {
-                                if(flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_BAD)) {
+                                Application.Current.Dispatcher.Invoke(() => { 
+                                    DisplayLedger.Add(new DisplayLedgerItem(block, false));
+                                });
+                                if (flags == (LEDGER_TOO_SHORT | LOCAL_LEDGER_BAD)) {
                                     connection.ReceveRemoteLedger();
                                     Pause();
                                 }
@@ -208,7 +218,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         private bool ValidateBlock(Block block, out uint flags)
         {
             flags = 0;
-            if (block.Index == 0)
+            if (block.Index == 0 && _ledger.Count == 0)
             {
                 return true;
             }
@@ -289,10 +299,23 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             block.GenerateHash(ref _Pause, ref _PauseMining);
             Application.Current.Dispatcher.Invoke(() =>
             {
-                Ledger.Add(block);
-                foreach (Connection connection in _connections)
+                //Ledger.Add(block);
+                uint flags = 0;
+                if (ValidateBlock(block, out flags))
                 {
-                    connection.Send(block.ToByteArray());
+                    AddLedgerItem(block);
+                    foreach (Connection connection in _connections)
+                    {
+                        connection.Send(block.ToByteArray());
+                    }
+                }
+                else
+                {
+                    DisplayLedger.Add(new DisplayLedgerItem(block, false));
+                    foreach (Connection connection in _connections)
+                    {
+                        connection.Send(block.ToByteArray());
+                    }
                 }
             });
         }
@@ -322,7 +345,10 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
                     }
                     else if (timeTaken > (SecondsBetweenNewBlocks * 2))
                     {
-                        Difficulty--;
+                        if (Difficulty > 1)
+                        {
+                            Difficulty--;
+                        }
                     }
                     else { /*NOP*/ }
                     numBlocksBeforeDifficultyChange = BlocksBetweenDifficultyChange;

@@ -45,6 +45,12 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
             this._iP = IP;
             this._port = Port;
         }
+        public void NodeDisconnected() {
+            _id = "Disconnected";
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Id"));
+            IP = "Disconnected";
+            Port = 0;
+        }
         public string Id
         {
             get { return _id; }

@@ -17,8 +17,8 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        <Label Height="35" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center">IP:</Label>
-        <Label Height="35" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">Port:</Label>
+        <Label FontSize="16" Foreground="#FFFFFF" Height="35" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center">IP:</Label>
+        <Label FontSize="16" Foreground="#FFFFFF" Height="35" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">Port:</Label>
         <TextBox x:Name="txtIP" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120" Height="25" Text="{Binding IP}"></TextBox>
         <TextBox x:Name="txtPort" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120" Height="25" Text="{Binding Port}"></TextBox>
         <Button x:Name="Add" Grid.Row="2" Grid.Column="1" IsDefault="True" HorizontalAlignment="Center" VerticalAlignment="Center" Width="120" Height="25" Click="Add_Click">Add Node</Button>

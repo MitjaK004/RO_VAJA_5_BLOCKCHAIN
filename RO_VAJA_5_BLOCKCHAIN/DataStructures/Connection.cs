@@ -34,6 +34,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         public Node _remoteNode { get; private set; }
         public bool ConncetionRunning = false;
         public event PropertyChangedEventHandler? PropertyChanged;
+        public bool Disconected = false;
 
         TcpClient client;
         NetworkStream clientStream;
@@ -123,40 +124,53 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         {
             while (ConncetionRunning)
             {
-                byte[] data = new byte[MaxBufferSize];
-                byte[] confirmation = new byte[1];
-                confirmation[0] = 1;
-                int bytesRead = remoteClientStream.Read(data, 0, data.Length);
-                Array.Resize(ref data, bytesRead);
-                if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
+                try
                 {
-                    //MessageBox.Show("SEND_LEDGER_SIGNAL");
-                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
-                    InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
-                    InstantRecieveSync_NoConfirm();
-                    SendLedger();
-                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
+                    byte[] data = new byte[MaxBufferSize];
+                    byte[] confirmation = new byte[1];
+                    confirmation[0] = 1;
+                    int bytesRead = remoteClientStream.Read(data, 0, data.Length);
+                    Array.Resize(ref data, bytesRead);
+                    if (data.SequenceEqual(SEND_LEDGER_SIGNAL))
+                    {
+                        //MessageBox.Show("SEND_LEDGER_SIGNAL");
+                        Application.Current.Dispatcher.Invoke(() => { Pause(); });
+                        InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
+                        InstantRecieveSync_NoConfirm();
+                        SendLedger();
+                        Application.Current.Dispatcher.Invoke(() => { Resume(); });
+                    }
+                    else if (data.SequenceEqual(RECV_LEDGER_SIGNAL))
+                    {
+                        //MessageBox.Show("RECV_LEDGER_SIGNAL");
+                        Application.Current.Dispatcher.Invoke(() => { Pause(); });
+                        InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL_RECV_READY);
+                        RecieveLedger();
+                        Application.Current.Dispatcher.Invoke(() => { Resume(); });
+                    }
+                    else if (data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
+                    {
+                        //MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
+                        Application.Current.Dispatcher.Invoke(() => { Pause(); });
+                        SendLedger();
+                        Application.Current.Dispatcher.Invoke(() => { Resume(); });
+                    }
+                    else
+                    {
+                        recievedData.Add(data);
+                        remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
+                        NewDataRecieved = true;
+                    }
                 }
-                else if(data.SequenceEqual(RECV_LEDGER_SIGNAL))
+                catch (Exception ex)
                 {
-                    //MessageBox.Show("RECV_LEDGER_SIGNAL");
-                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
-                    InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL_RECV_READY);
-                    RecieveLedger();
-                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
-                }
-                else if(data.SequenceEqual(SEND_LEDGER_SIGNAL_RECV_READY))
-                {
-                    //MessageBox.Show("SEND_LEDGER_SIGNAL_RECV_READY");
-                    Application.Current.Dispatcher.Invoke(() => { Pause(); });
-                    SendLedger();
-                    Application.Current.Dispatcher.Invoke(() => { Resume(); });
-                }
-                else
-                {
-                    recievedData.Add(data);
-                    remoteClient.GetStream().Write(confirmation, 0, confirmation.Length);
-                    NewDataRecieved = true;
+                    ConncetionRunning = false;
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        RemoteNode.NodeDisconnected();
+                        Disconected = true;
+                        Resume();
+                    });
                 }
             }
             return Task.CompletedTask;
@@ -168,84 +182,136 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         private Task InstantSend(byte[] data)
         {
-            byte[] confirmation = new byte[1];
-            confirmation[0] = 0;
-            while (confirmation[0] == 0)
+            if (!Disconected)
             {
-                client.GetStream().Write(data, 0, data.Length);
-                client.GetStream().Read(confirmation, 0, confirmation.Length);
+                try
+                {
+                    byte[] confirmation = new byte[1];
+                    confirmation[0] = 0;
+                    while (confirmation[0] == 0)
+                    {
+                        client.GetStream().Write(data, 0, data.Length);
+                        client.GetStream().Read(confirmation, 0, confirmation.Length);
+                    }
+                }
+                catch { }
             }
             return Task.CompletedTask;
         }
         private void InstantSendSync(byte[] data)
         {
-            byte[] confirmation = new byte[5];
-            client.GetStream().Read(confirmation, 0, confirmation.Length);
-            while (!confirmation.SequenceEqual(DATA_OK))
+            if (!Disconected)
             {
-                client.GetStream().Write(data, 0, data.Length);
-                client.GetStream().Read(confirmation, 0, confirmation.Length);
+                try
+                {
+                    byte[] confirmation = new byte[5];
+                    client.GetStream().Read(confirmation, 0, confirmation.Length);
+                    while (!confirmation.SequenceEqual(DATA_OK))
+                    {
+                        client.GetStream().Write(data, 0, data.Length);
+                        client.GetStream().Read(confirmation, 0, confirmation.Length);
+                    }
+                    client.GetStream().Write(CONTINUE, 0, CONTINUE.Length);
+                }
+                catch { }
             }
-            client.GetStream().Write(CONTINUE, 0, CONTINUE.Length);
         }
         private byte[] InstantRecieveSync()
         {
             byte[] data = new byte[MaxBufferSize];
-            byte[] confirmation = new byte[5];
-            remoteClientStream.Write(RECV_READY, 0, RECV_READY.Length);
-            int bytesRecieved = remoteClientStream.Read(data, 0, data.Length);
-            Array.Resize(ref data, bytesRecieved);
-            remoteClientStream.Write(DATA_OK, 0, DATA_OK.Length);
-            remoteClientStream.Read(confirmation, 0, confirmation.Length);
+            if (!Disconected)
+            {
+                try
+                {
+                    byte[] confirmation = new byte[5];
+                    remoteClientStream.Write(RECV_READY, 0, RECV_READY.Length);
+                    int bytesRecieved = remoteClientStream.Read(data, 0, data.Length);
+                    Array.Resize(ref data, bytesRecieved);
+                    remoteClientStream.Write(DATA_OK, 0, DATA_OK.Length);
+                    remoteClientStream.Read(confirmation, 0, confirmation.Length);
+                }
+                catch { }
+            }
             return data;
         }
         private void InstantSendSync_NoConfirm(byte[] data)
         {
-            client.GetStream().Write(data, 0, data.Length);
+            if (!Disconected)
+            {
+                try
+                {
+                    client.GetStream().Write(data, 0, data.Length);
+                }
+                catch { }
+            }
         }
         private byte[] InstantRecieveSync_NoConfirm()
         {
             byte[] data = new byte[MaxBufferSize];
-            int bytesRecieved = remoteClientStream.Read(data, 0, data.Length);
-            Array.Resize(ref data, bytesRecieved);
+            if (!Disconected)
+            {
+                try
+                {
+                    int bytesRecieved = remoteClientStream.Read(data, 0, data.Length);
+                    Array.Resize(ref data, bytesRecieved);
+                }
+                catch { }
+            }
             return data;
         }
         public void ReceveRemoteLedger()
         {
-            InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL);
+            if (!Disconected)
+            {
+                try
+                {
+                    InstantSendSync_NoConfirm(SEND_LEDGER_SIGNAL);
+                }
+                catch { }
+            }
         }
         public void SendLocalLedger()
         {
-            InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
+            if (!Disconected)
+            {
+                try
+                {
+                    InstantSendSync_NoConfirm(RECV_LEDGER_SIGNAL);
+                }
+                catch { }
+            }
         }
         
         private async void RunConnection(bool connectionEstablished)
         {
-            if(!connectionEstablished)
+            try
             {
-                try
+                if (!connectionEstablished)
                 {
-                    ConnectToServer();
+                    try
+                    {
+                        ConnectToServer();
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
+                        Error = true;
+                        client.Close();
+                        return;
+                    }
+                    ServerListen();
+                    ConncetionRunning = true;
                 }
-                catch (Exception e)
+                else
                 {
-                    MessageBox.Show(e.Message + "\n" + e.StackTrace, "ERROR");
-                    Error = true;
-                    client.Close();
-                    return;
+                    ConnctToClientSServer();
+                    ConncetionRunning = true;
                 }
-                ServerListen();
-                ConncetionRunning = true;
-            }
-            else
-            {
-                ConnctToClientSServer();
-                ConncetionRunning = true;
-            }
-            _= Task.Run(() => Reciever());
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node1"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node2"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connection"));
+                _ = Task.Run(() => Reciever());
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node1"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Node2"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Connection"));
+            } catch { }
         }
         private void ConnectToServer()
         {
@@ -315,15 +381,19 @@ namespace RO_VAJA_5_BLOCKCHAIN.DataStructures
         }
         public void FindAvailableLocalPort()
         {
-            defaultLocalPort = FindAvailablePort(defaultLocalPort);
-            if(defaultLocalPort == -1)
+            try
             {
-                defaultLocalPort = FindAvailablePort(0);
-                if(defaultLocalPort == -1)
+                defaultLocalPort = FindAvailablePort(defaultLocalPort);
+                if (defaultLocalPort == -1)
                 {
-                    MessageBox.Show("No available ports", "ERROR");
+                    defaultLocalPort = FindAvailablePort(0);
+                    if (defaultLocalPort == -1)
+                    {
+                        MessageBox.Show("No available ports", "ERROR");
+                    }
                 }
             }
+            catch { }
         }
         public static int FindAvailablePort(int start = 25351)
         {

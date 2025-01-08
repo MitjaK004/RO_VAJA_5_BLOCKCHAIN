@@ -14,9 +14,9 @@ namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         private Blockchain _blockchain = new Blockchain();
-        public ObservableCollection<Block> Ledger
+        public ObservableCollection<DisplayLedgerItem> DisplayLedger
         {
-            get { return blockchain.Ledger; }
+            get { return blockchain.DisplayLedger; }
         }
         public Blockchain blockchain
         {
@@ -28,7 +28,7 @@ namespace RO_VAJA_5_BLOCKCHAIN.EventHandling
             }
         }
         public ViewModel() {
-            Ledger.CollectionChanged += Ledger_CollectionChanged;
+            DisplayLedger.CollectionChanged += Ledger_CollectionChanged;
         }
 
         private void Ledger_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
